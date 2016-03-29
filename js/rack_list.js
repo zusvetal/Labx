@@ -10,7 +10,7 @@ $('#content').on('click.racks', 'span.add', function (event) {
             .then(function () {
                 return form.getForm(modal.getBodyField());
             })
-            .then(function (idDevice) {
+            .then(function () {
                 modal.setTitle('Add new rack');
                 modal.setWidth('25%');
                 modal.show();

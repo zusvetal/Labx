@@ -31,16 +31,20 @@ var getAddingForm = function (modal,idDeviceInLabdesk, options) {
 $('#content').on('click', 'span.add', function (event) {
     var idLabdesk = $(this).closest('div.labdesk').data('idLabdesk'),
             labdeskDevice, idDeviceInLabdesk, idDevice, modelName,
-            labdeskDevice = new LabdeskForm(),
+            labdeskDevice = new LabdeskForm(idLabdesk),
             modal = new Modal(),
             freeList = new FreeEquipList('device', '2');
+            
     event.preventDefault();
     modal.getModal($('#addNewDeviceToLabdesk'))
             .then(function () {
                 modal.setTitle('Add device into labdesk');
                 modal.show();
-                return labdeskDevice.getForm(modal.getBodyField(), idLabdesk);
+                return labdeskDevice.getForm(modal.getBodyField());
             })
+            .then(function () {
+                return labdeskDevice.eventListener();
+            })           
             .then(function (id) {
                 modelName = labdeskDevice.modelName();
                 idDeviceInLabdesk = id;

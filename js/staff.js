@@ -96,14 +96,15 @@ $('#content').on('click.staff', '.remove-team', function () {
     var $tr = $(this).closest('tr'),
             idTeam = $tr.attr('data-id-team');
     $.confirm("Do you want to remove this entry?")
-            .then(function () {
-                deleteValue('team', 'id_team', idTeam);
-                return $tr.fadeOut('slow')
+            .then(function () {          
+                return updateValue('staff', 'id_team', '0','id_team',idTeam);
+            })
+            .then(function () {          
+                return deleteValue('team', 'id_team', idTeam);
             })
             .then(function () {
-                $tr.remove();
-                recountNumber($('td.number'));
-            });
+                location.reload();
+            })
 });
 /******************************************************************************/
 /***************************** delete employee **********************************/

@@ -102,6 +102,9 @@ if (isset($_POST['get_barcode_form'])) {
     $slot = $_POST['slot'];
     include 'html/forms/barcode_form.html';
 }
+if (isset($_POST['get_labdesk_device_form'])) {
+    include 'html/forms/labdesk_device_form.html';
+}
 if (isset($_POST['get_team_form'])) {
     include 'html/forms/team_form.html';
 }

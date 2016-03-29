@@ -417,11 +417,10 @@ var List = function (table, idField, searchField) {
     this.searchField = searchField;
     this.getElementsDropDown = function ($parentEl, callback) {
         this.$parentEl = $parentEl;
-        console.log($parentEl, this)
         var modelName = $parentEl.text(),
                 eventListener = this.eventListener,
                 getLiveSearchList = this.getLiveSearchList;
-        $.post(
+       return  $.post(
                 "/ajax",
                 {
                     elements_dropdown: '1',
@@ -438,7 +437,7 @@ var List = function (table, idField, searchField) {
             }
             eventListener($parentEl, getLiveSearchList);
         });
-    }
+    };
     this.eventListener = function ($parentEl, getLiveSearchList) {
         $parentEl.on('keyup.search', 'input.search-element', function (event) {
             var noCharKey = [37, 38, 39, 40, 13, 16, 17, 18, 20, 19, 33, 34];
@@ -1244,35 +1243,69 @@ var patchPanelForm = function ($parentEl, idRack, topSlot, callback) {
     });
     return dfd.promise();
 };
-var LabdeskForm = function () {
-    this.getForm = function ($parentEl, idLabdesk, callback) {
-        var dfd = jQuery.Deferred(),
-                modelList = new List('device_model', 'id_model', 'model'),
-                body = '<div id="addForm" class="border"><div id="searchField"></div>\
-               <div align="right">\
-                    <button type="button" class="btn btn-primary submit">Add device</button>\
-               </div></div>';
-        this.modelList = modelList;
+var LabdeskForm = function (idLabdesk) {
+    var modelList = new List('device_model', 'id_model', 'model');
+    this.getForm = function ($parentEl, callback) {
+        var dfd = jQuery.Deferred();
         this.$parentEl = $parentEl;
-        $parentEl.html(body);
-        modelList.getElementsDropDown($parentEl.find('#searchField'));
-        $parentEl.off('.add', '**');
-        $parentEl.on('click.add', 'button.submit', function () {
+        $.post('/ajax', {get_labdesk_device_form: '1'})
+                .then(function (body) {
+                    $parentEl.html(body);
+                    return modelList.getElementsDropDown($parentEl.find('#searchField'));
+                })
+                .then(function () {
+                    if (callback && typeof (callback) === "function") {
+                        callback($parentEl);
+                    }
+                    dfd.resolve($parentEl);
+                })
+        return dfd.promise();
+    }
+    this.eventListener = function (callback) {
+        var dfd = jQuery.Deferred(),
+                $parentEl = this.$parentEl;
+        $parentEl.on('click.add', 'button.submit-labdesk-device', function () {
             var idModel = modelList.getElementId(),
+                    $btn = $(this),
                     modelName = modelList.getInputVal(),
-                    idDeviceInLabdesk;
+                    idDeviceInLabdesk,
+                    modelForm = new ModelForm('device');
             if (modelName !== '') {
+                var promise = $.when();
                 if (idModel === '0') {
-                    if (confirm(modelName + " not exist in the db.\n Add '" + modelName + "' to model database?")) {
-                        idModel = modelList.addElementToDb(modelName);
-                    }
-                    else {
-                        modelList.focusToInputField();
-                        return false;
-                    }
+                    promise = promise
+                            .then(function () {
+                                return $.confirm("<center>" + modelName + " not exist in the db.\n Add '" + modelName + "' to model database?</center>");
+                            })
+                            .then(
+                                    function () {
+                                        /*model form*/
+                                        $btn.hide();
+                                        $parentEl.find('input').attr('disabled', 'disabled');
+                                        $parentEl.find('button').attr('disabled', 'disabled');
+                                        $('#modalWindow').css('overflow-y', 'auto');
+                                        infoMessage($parentEl.find('.info-field'),
+                                                "<center> Add model <b>" + modelName + "</b> to database.</center>");
+                                        return modelForm.getForm($parentEl.find('#modelForm'), {model: modelName}, slideToEl($('#modalWindow'), $parentEl.find('.info-field')));
+                                    },
+                                    function () {
+                                        modelList.focusToInputField();
+                                        return $.Deferred();
+                                    }
+                            )
+                            .then(function () {
+                                return modelForm.eventListener();
+                            })
+                            .then(function (id) {
+                                idModel = id;
+                                return $.when();
+                            })                          
                 }
-                idDeviceInLabdesk = insertValue('devices_in_labdesks', 'id_model', idModel);
-                updateValue('devices_in_labdesks', 'id_labdesk', idLabdesk, 'id_device_in_labdesk', idDeviceInLabdesk)
+                promise
+                        .then(function () {
+                            idDeviceInLabdesk = insertValue('devices_in_labdesks', 'id_model', idModel);
+                            return updateValue('devices_in_labdesks', 'id_labdesk', idLabdesk, 'id_device_in_labdesk', idDeviceInLabdesk);
+                        })
                         .then(function () {
                             $parentEl.empty();
                             dfd.resolve(idDeviceInLabdesk);
@@ -1287,14 +1320,13 @@ var LabdeskForm = function () {
                 return false;
             }
         });
-
         return dfd.promise();
     }
     this.getBody = function () {
         return this.$parentEl.find('#addForm');
     };
     this.modelName = function () {
-        return this.modelList.getInputVal();
+        return modelList.getInputVal();
     };
 };
 var interfaceForm = function () {
@@ -1845,7 +1877,7 @@ var RackForm = function () {
         });
         return dfd.promise()
     };
-    this.eventListener = function () {
+    this.eventListener = function (callback) {
         var $parentEl = this.$parentEl;
         var dfd = jQuery.Deferred();
         $parentEl.on('click.rack', 'button.submit', function () {
@@ -1857,6 +1889,7 @@ var RackForm = function () {
                     idRack, idBackRack,
                     numOfUnitPattern = /^\d+$/,
                     permission = true,
+                    idGlobalLocation=getIdGlobalLocation(),
                     labName = labList.getInputVal();
 
             if (!numOfUnitPattern.test(numOfUnit) || numOfUnit == '0') {
@@ -1867,26 +1900,48 @@ var RackForm = function () {
                 permission = false;
             }
             if (rackName !== '' && permission === true) {
+                var promise=$.when();
                 /**checking the existence of labs**/
                 if (idLab === '0') {
-                    if (labName !== '' && confirm(labName + " not exist in the db.\n Add lab '" + labName + "' to database?")) {
-                        idLab = labList.addElementToDb(labName);
-                    }
-                    else {
-                        infoMessage($parentEl.find('.info-field'), 'Choose location or add new one', function () {
+                    if (labName === '') {
+                        infoMessage($parentEl.find('.info-field'), 'Choose <b>location</b> or add new one', function () {
                             labList.focusToInputField();
                         });
                         return false;
                     }
+                    else {
+                        promise = promise
+                                .then(function () {
+                                    return $.confirm("<center><b>" + labName + "</b> not exist in the db.<br/> Add lab <b>'" + labName + "'</b> to database?</center>");
+                                })
+                                .then(
+                                        function () {
+                                            idLab = labList.addElementToDb(labName);
+                                            return $.when();
+                                        },
+                                        function () {
+                                            infoMessage($parentEl.find('.info-field'), 'Choose location or add new one', function () {
+                                                labList.focusToInputField();
+                                            });
+                                            return $.Deferred();
+                                        }
+                                )
+                                .then(function () {
+                                    return updateValue('labs','id_global_location',idGlobalLocation,'id_lab',idLab);
+                                })
+                    }
                 }
-                idBackRack = insertValueList('rack', {'name': rackName + ' back', number_of_unit: numOfUnit, id_lab: idLab});
-                idRack = insertValueList('rack', {'name': rackName, number_of_unit: numOfUnit, id_back_rack: idBackRack, id_lab: idLab});
-                dfd.resolve(idRack);
-                dfd.always($parentEl.off('.rack', '**'));
-                if (callback && typeof (callback) === "function") {
-                    callback(idRack);
-                }
-                $parentEl.empty();
+                promise
+                        .then(function () {
+                            idBackRack = insertValueList('rack', {'name': rackName + ' back', number_of_unit: numOfUnit, id_lab: idLab});
+                            idRack = insertValueList('rack', {'name': rackName, number_of_unit: numOfUnit, id_back_rack: idBackRack, id_lab: idLab});
+                            dfd.resolve(idRack);
+                            dfd.always($parentEl.off('.rack', '**'));
+                            if (callback && typeof (callback) === "function") {
+                                callback(idRack);
+                            }
+                            $parentEl.empty();
+                        });
             }
             else {
                 $form.find('.rack-name').focus();
@@ -1977,40 +2032,53 @@ var EmployeeForm = function () {
                     teamName = teamList.getInputVal(),
                     idGlobalLocation = getIdGlobalLocation();
             if (name !== '') {
-                if (action === 'update') {
-                    updateValueList('staff', {'employee_name': name, id_team: idTeam}, 'id_employee', idEmployee)
+                var promise = $.when();
+                if (idTeam === '0') {
+                    if (teamName === '') {
+                        promise = promise
+                                .then(function () {
+                                    return $.when();
+                                });
+                    }
+                    else {
+                        promise = promise
+                                .then(function () {
+                                    return $.confirm("<center><b>" + teamName + "</b> not exist in the db.<br/> Add team <b>'" + teamName + "'</b> to database?</center>");
+                                })
+                                .then(
+                                        function () {
+                                            idTeam = teamList.addElementToDb(teamName);
+                                            return $.when();
+                                        },
+                                        function () {
+                                            teamList.focusToInputField();
+                                            return $.Deferred();
+                                        }
+                                )
+                                .then(function () {
+                                    return updateValue('team', 'id_global_location', idGlobalLocation, 'id_team', idTeam);
+                                })
+                    }
+                }
+                if (action === 'insert') {
+                    promise = promise
                             .then(function () {
-                                dfd.resolve(idEmployee);
-                                dfd.always($parentEl.off('.employee', '**'));
-                                if (callback && typeof (callback) === "function") {
-                                    callback(idEmployee);
-                                }
-                                $parentEl.empty();
+                                idEmployee = insertValue('staff', 'employee_name', name);
+                                return $.when();
                             })
                 }
-                else if (action === 'insert') {
-                    if (idTeam === '0') {
-                        if (teamName !== '' && confirm(teamName + " not exist in the db.\n Add lab '" + teamName + "' to database?")) {
-                            idTeam = teamList.addElementToDb(teamName);
-                        }
-                        else {
-                            infoMessage($parentEl.find('.info-field'), 'Choose team or add new one', function () {
-                                teamList.focusToInputField();
-                            });
-                            return false;
-                        }
-                    }
-                    idEmployee = insertValueList('staff', {'employee_name': name, id_team: idTeam, id_global_location: idGlobalLocation});
-                    dfd.resolve(idEmployee);
-                    dfd.always($parentEl.off('.employee', '**'));
-                    if (callback && typeof (callback) === "function") {
-                        callback(idEmployee);
-                    }
-                    $parentEl.empty();
-                }
-                else {
-                    $parentEl.find('#name input').focus();
-                }
+                promise 
+                        .then(function () {
+                            return updateValueList('staff', {employee_name: name, id_team: idTeam,id_global_location:idGlobalLocation}, 'id_employee', idEmployee);
+                        })
+                        .then(function () {
+                            dfd.resolve(idEmployee);
+                            dfd.always($parentEl.off('.employee', '**'));
+                            if (callback && typeof (callback) === "function") {
+                                callback(idEmployee);
+                            }
+                            $parentEl.empty();
+                        });
             }
         });
         $parentEl.on('click.employee', '#closeForm', function () {
