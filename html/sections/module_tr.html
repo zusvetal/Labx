@@ -1,0 +1,22 @@
+<tr  class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-module="<?=$module['id_module']?>">
+    <td class="number"</td>
+    <td class="value model" data-item="model"><?=$module['model']?> </td>
+    <td class="value" data-item="sn"><?=$module['sn']?> </td>
+    <td class="value" data-item="pn"><?=$module['pn']?> </td>
+    <td class="value" data-item="asset_harmonic"><?=$module['asset_harmonic']?> </td>  
+    <td class="value" data-item="asset_gl"><?=$module['asset_gl']?> </td>
+    <td class="value owner" data-item="owner"><?=$module['employee_name']?> </td>
+    <td class="value team" data-item="team"><?=$module['team_name']?> </td>
+    <td class="status hide-td">
+        <?php if(!empty($module['id_device'])):?>
+        <span class="glyphicon used" data-toggle="popover" data-id-device="<?=$module['id_device']?>">used</span>
+        <?php else:?>
+        <span class="glyphicon free" data-toggle="popover">free</span>
+        <?php endif;?>
+    </td>
+    <td class="hide-td icon"><span class="glyphicon glyphicon-info-sign info info-module"></span></td>
+    <?php if($_SESSION['level']=='0'):?>
+    <td class="hide-td icon"><span class="glyphicon glyphicon-edit edit-module"></span></td>
+    <td class="hide-td icon"><span class="glyphicon glyphicon-remove remove-module"></span></td>
+    <?php endif;?>
+</tr>

@@ -1,0 +1,49 @@
+<div id="addForm" class="border">
+    <button type="button" id="closeForm" class="close"><span>&times;</span></button>
+    <table class="table no-border">
+        <tr>
+            <td> Models:</td>
+            <td id="modelDevice" data-item="model"></td>
+        </tr>
+        <tr>
+            <td>Harmonic barcode:</td>
+            <td id="harmonicBarcode" data-item="asset_harmonic"><input name="asset_harmonic" type="text" class="value form-control"></td>
+        </tr>
+        <tr>
+            <td>GL barcode:</td>
+            <td id="glBarcode" data-item="asset_gl"><input name="asset_gl" type="text" class="value form-control"></td>
+        </tr>
+        <tr>
+            <td>S/N:</td>
+            <td id="sn" data-item="sn"><input name="sn" type="text" class="value form-control"></td>
+        </tr>
+        <tr>
+            <td>P/N:</td>
+            <td id="pn" data-item="pn"><input name="pn" type="text" class="value form-control"></td>
+        </tr>
+        <tr>
+            <td>Owner:</td>
+            <td id="deviceOwner" data-item="id_owner"></td>
+        </tr>
+        <tr>
+            <td>Team:</td>
+            <td id="deviceTeam" data-item="id_team"></td>
+        </tr>
+        <tr>
+            <td colspan="2" >           
+                <center><b>Description for model</b></center>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" >           
+                <div id="comment"></div>
+            </td>
+        </tr>
+    </table>
+    <div class="info-field"></div>
+    <div id="modelForm">  
+    </div>
+    <div align="right">       
+        <button type="button" class="btn btn-primary submit">Submit</button>
+    </div>   
+</div>

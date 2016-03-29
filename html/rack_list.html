@@ -1,0 +1,39 @@
+<div id="content">
+    <!-- Modal -->
+    <div id="addNewRack"></div>
+    <!--/Modal-->
+    <div class="item-table"> 
+        <h2>Rack List</h2>
+        <span class="add glyphicon glyphicon-plus"></span>
+
+        <table class="table table-hover table-bordered" >
+            <tr>
+                <th class="number"></th>
+                <th>Rack Name</th>
+                <th>Number of units</th>
+                <th>Free units</th>
+                <th>Location</th>
+            </tr>
+            <?php if(!empty($rack_list)):?>
+            <?php $num=0;?>
+            <?php foreach( $rack_list as $id_rack => $rack):?>
+            <?php ++$num;?>
+                    <tr  class="rack" data-id-rack="<?=$id_rack?>" data-id-back-rack="<?=$rack['id_back_rack']?>">
+                        <td class="number"><?=$num?></td>
+                        <td class="value" data-item="name"><?=$rack['name']?> </td>
+                        <td class="value" data-item="number_of_unit"><?=$rack['number_of_unit']?> </td>  
+                        <td><?=$rack['free_space']?></td>
+                        <td class="rack-location"><?=$rack['lab_name']?></td>
+                        <td class="hide-td"><span class="glyphicon glyphicon-remove remove"></span></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif;?>
+            <tr  class="rack" data-id-rack="<?=$id_rack?>">
+                <td colspan="3" align="right"><b>Total:</b></td>
+                <td colspan="2"><?=$sum?></td>
+                <td class="hide-td"></td>
+            </tr>
+        </table>
+    </div>
+</div>        
+<script src="/js/rack_list.js"></script>

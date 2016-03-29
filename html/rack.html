@@ -1,0 +1,169 @@
+    <!-- Rack Table-->
+    <div id='rackTable' class="item-table" data-id-rack="<?=$id_rack?>">
+        <table class="table table-bordered" >
+            <tr>
+                <?php if($_SESSION['level']=='0'):?>
+                    <th class="hide-td right-border  tools"></th>
+                <?php endif;?>
+                <th>unit</th>
+                <th>mng_ip</th>
+                <th>model</th>
+                <?php foreach( $rack_port_list as $id_port => $name):?>
+                <th><?=$name?></th>
+                <?php endforeach; ?>
+                <th class="hide-td"></th>
+            </tr>
+            <?php foreach( $rack as $unit => $device):?> 
+            <?php echo ($device['action']=='1')  ? '</tbody>' : ''?>
+            <?php echo ($device['full']=='1'&& $device['action']=='1'&& $device['mark']=='0')  ? '<tbody class="device-in-rack">' : ''?>
+            <?php echo ($device['full']=='1'&& $device['action']=='1'&& $device['mark']!=='0')  ? '<tbody class="device-in-rack mark-device">' : ''?>
+                <?php if(!empty($device['id_shelf'])):?>
+                    <!-- Shelf field -->
+                    <tr class="unit" data-id-shelf="<?= $device['id_shelf']?>">
+                        <?php if($_SESSION['level']=='0'):?>
+                            <td class="hide-td right-border  tools">                           
+                                <span class="glyphicon glyphicon-minus del-device" data-type="shelf"></span>
+                            </td>
+                        <?php endif;?>
+                        <td class="number-of-unit">
+                            <?=$unit?>
+                        </td>
+                        <td class="shelf" colspan="<?php echo $col_count-2 ?>">Shelf</td>
+                    </tr>
+                    <!-- /Shelf field -->
+                    <!-- Patchpanel field -->
+                <?php elseif(!empty($device['patchpanel'])): ?>
+                    <tr class="unit" data-id-patchpanel=" <?=$device['patchpanel']['id_patchpanel']?>">
+                        <?php if($_SESSION['level']=='0'):?>
+                            <td class="hide-td right-border tools">                          
+                                <span class="glyphicon glyphicon-minus del-device" data-type="patchpanel"></span>                             
+                            </td>
+                        <?php endif;?>
+                        <td class="number-of-unit">
+                            <?=$unit?>
+                        </td>
+                        <td class="patchpanel" colspan="<?php echo $col_count-2 ?>">
+                            <?php echo $device['patchpanel']['name']?>
+                        </td>
+                        
+                        <td class="hide-td status">
+                            <?php echo $device['id_device'] === '0' ? '<span class="warning glyphicon glyphicon-warning-sign"><span>':'' ?>
+                            <span class="info-patchpanel glyphicon glyphicon-info-sign" data-id-patchpanel="<?=$device['patchpanel']['id_patchpanel']?>"
+                                  data-id-model="<?=$device['patchpanel']['id_model']?>"></span>
+                        </td>
+                    </tr>
+                   <!-- /Patchpanel field -->
+                   <!-- Tower field -->
+                <?php elseif(!empty($device['tower'])): ?>
+                    <?php if(!empty($device['top'])):?>
+                    <tr class="unit">
+                        <?php if($_SESSION['level']=='0'):?>
+                            <td class="hide-td right-border tools"></td>
+                        <?php endif;?> 
+                        <td class="number-of-unit">
+                            <?=$unit?>
+                        </td>
+                        <td  colspan="<?php echo $col_count-2 ?>" rowspan="<?=$device['tower']?>">
+                            <!-- check number of tower device -->
+                            <?php if($_SESSION['level']=='0'):?>
+                                <?php if(count($device['tower_devices'])<3):?>
+                                    <div class="tools wrap-add-tower" align="center"><span class="glyphicon glyphicon-plus add-device add-tower"></span></div>
+                                <?php endif;?>
+                            <?php endif;?> 
+                            <?php foreach( $device['tower_devices'] as $id_tower=> $tower):?>
+                                <div class="tower device" data-id-device-in-rack="<?=$id_tower?>" data-id-device="<?=$tower['id_device']?>">
+                                    <?php echo $tower['id_device']=='0'?       
+                                            '<span class="glyphicon glyphicon-warning-sign warning" data-id-device-in-rack="'.$id_tower.'"></span>':
+                                            '<span class="glyphicon glyphicon-info-sign info" data-id-device="'.$tower['id_device'].'"></span>';
+                                    ?>
+                                    <?php if($_SESSION['level']=='0'):?>
+                                        <button type="button" class="tools close" ><span class="del-device" data-type="tower">&times;</span></button>
+                                    <?php endif;?> 
+                                    <h4  data-item="model"><?=$tower['model']?></h4>
+                                    <div class="edit">
+                                        <?=$tower['mng_ip']?>
+                                        <span class="glyphicon glyphicon-edit update-ip edit-tower" title="add/edit network interfaces"></span>    
+                                    </div>    
+                                </div>
+                            <?php endforeach; ?>
+                        </td>
+                        <td class="hide-td status"></td>
+                    </tr>
+                    <?php else: ?>
+                    <tr class="unit">
+                        <?php if($_SESSION['level']=='0'):?>
+                            <td class="hide-td right-border tools"></td>
+                        <?php endif;?>
+                        <td class="number-of-unit">
+                            <?=$unit?>
+                        </td>
+                        <td class="hide-td status"></td>
+                    </tr>
+                    <?php endif;?>
+                    <!-- /Tower field -->
+                    <!-- Rack device field -->
+                <?php else: ?>                           
+                    <tr  class="unit <?php echo $device['full']=='0' ? 'empty ' : 'full device'?>" 
+                         data-id-device-in-rack="<?=$device['id_device_in_rack']?>" 
+                         data-id-device="<?=$device['id_device']?>"
+                         data-slot="<?=$unit?>" data-size="<?=$device['size']?>">
+                        <?php if($_SESSION['level']=='0'):?>
+                            <td class="hide-td right-border  tools">
+                                <span class="glyphicon <?php echo $device['full']=='0' ? 'glyphicon-plus add-device' : 'glyphicon-minus del-device'?>" 
+                                      data-type="<?php echo $device['full']=='1' ? 'device' : ''?>" 
+                                      style="display:<?php echo $device['action']=='0' ? 'none':'' ?>">        
+                                </span> 
+                            </td>
+                        <?php endif;?>
+                        <td class="number-of-unit edit">
+                            <?=$unit?>
+                            <?php if($_SESSION['level']=='0'):?>
+                                <?php echo ($device['full']=='1'&& $device['action']=='1')  ? '<span class="glyphicon glyphicon-pushpin td-icon-small"></span>' : ''?>                     
+                            <?php endif;?>
+                        </td>
+                        <td class="<?php echo ($device['full']=='1'&& $device['action']=='1')  ? 'edit' : ''?>  mng-ip" data-item="mng_ip">
+                                <?php if( !empty($device['interfaces'])):?>
+                                    <?php foreach( $device['interfaces'] as $id_int => $int):?>
+                                    <span class="ip-interface <?php echo !empty($int['virt'])?'virt-host':''?>" data-toggle="popover" data-id-interface="<?=$id_int?>"
+                                          data-content=""
+                                          ><?=$int['ip']?></span>
+                                     <?php endforeach; ?>
+                                 <?php else:?>
+                                 <?php endif;?>
+
+                                <?php echo ($device['full']=='1'&& $device['action']=='1'&&$device['id_device']!=='0')  ? '<span class="glyphicon glyphicon-edit td-icon update-ip"></span>' : ''?>
+  
+                        </td>
+                        <td class="model" data-item="model"><?=$device['model']?> </td>  
+                        <?php foreach( $rack_port_list as $id_port => $name):?>
+                            <?php if(array_key_exists($id_port,$device['ports'])):?>
+                                <td class="link" data-id-port="<?=$id_port?>" 
+                                    data-id-link="<?php echo isset($device['ports'][$id_port]['id_link'])? $device['ports'][$id_port]['id_link']:''?>"
+                                    data-id-module="<?=$device['ports'][$id_port]['id_module']?>"
+                                    title="<?=$name?>">
+                                    <?php echo isset($device['ports'][$id_port]['link'])? $device['ports'][$id_port]['link']:''?>  
+                                </td>
+                            <?php else: ?>
+                                <td class=" <?php echo ($device['full']=='1'&& $device['action']=='1')  ? 'no-link' : ''?>" data-id-port="<?=$id_port?>"  data-id-link="0"></td>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <td class="hide-td status">
+                            <?php echo $device['id_device'] === '0' ? '<span class="warning glyphicon glyphicon-warning-sign" data-id-device-in-rack="'.$device['id_device_in_rack'].'"></span>':'' ?>
+                            <?php echo $device['id_device'] !=='0' && $device['action'] !=='0' && $device['full'] !=='0' ? '<span class="info glyphicon glyphicon-info-sign" data-id-device="'.$device['id_device'].'"></span>':'' ?>
+                        </td>
+                        <td class="hide-td status booking hidden">
+                            <?php echo $device['reserved_by']=='0' ? '<span class="glyphicon free">free<span>':'' ?>
+                            <?php echo !empty($device['reserved_by']) ? ' <div class="guy"><button type="button" class="close unbook" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <small class="booking-guys">'.$device['reserved_by'].'</small></div>':'' ?>
+                        </td>
+                        <?php if($device['point']=='1'):?>
+                            <td class="hide-td"><span class="glyphicon glyphicon-ok point"></span></td>
+                        <?php endif;?>
+                    </tr>
+                <?php endif;?>
+                <!-- /Rack device field -->
+            <?php endforeach; ?>
+        </table>
+    </div>
+    <!-- /Rack Table-->
+

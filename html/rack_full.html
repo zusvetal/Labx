@@ -1,0 +1,30 @@
+<div id="content">
+    <div id="fullRack">
+        <span class="glyphicon glyphicon-arrow-left left-nav"></span>
+        <span class="glyphicon glyphicon-arrow-right right-nav"></span>
+        <div id="leftMenu"></div>
+        <h2 align="center"> Rack <?=$rack_name?></h2>
+        <table class="table no-border">
+            <tr>
+                <td><h3 align="center">Front</h3></td>
+                <td><h3 align="center">Back</h3></td>
+            </tr>
+            <tr>
+                <td id="frontRack" class="rack-body">
+                    <?php
+                    include 'rack.php';
+                    ?>
+                </td>
+                <td id="backRack" class="rack-body">
+                    <?php
+                    $id_rack=$id_back_rack;
+                    include 'rack.php'; 
+                    ?>
+                </td>
+            </tr>
+        </table>  
+    </div>
+</div>
+<script type="text/javascript" >
+    < ?php include_once('js/rack.js'); ? >
+</script>

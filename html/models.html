@@ -1,0 +1,60 @@
+<link rel="stylesheet" type="text/css" href="/css/models.css">
+<div id="content" data-category="<?=$category?>">
+    <!-- Modal -->
+    <div id="addNewModel"></div>
+    <!--/Modal-->
+    <!-- Modal -->
+    <div id="editModel"></div>
+    <!--/Modal-->
+    <!-- Modal -->
+    <div id="portSetList"></div>
+    <!--/Modal-->
+    <!-- Modal -->
+    <div id="imgModel"></div>
+    <!--/Modal-->
+    <!-- upScroll -->
+    <p id="back-top">
+        <a href="#content"><span class="glyphicon glyphicon-arrow-up"></span></a>
+    </p>
+    <!-- /upScroll -->
+    <div class="item-table"> 
+        <h2>Available <?=$category?> models </h2>                
+        <span class="add glyphicon glyphicon-plus"></span>
+        <table id="modelTable" class="table table-hover table-bordered" >
+            <tr class="item">
+                <th></th>
+                <th>Model</th>
+                <th>Port set</th>
+            </tr>
+            <?php foreach( $models as $id_model => $model):?> 
+            <tr class="item" data-id-model="<?=$id_model?>">
+                <td width="160">
+                    <?php if(!empty($model['icon_name'])):?>
+                    <div class="img">
+                        <button type="button" class="close remove-image"><span>&times;</span></button>
+                        <img width="120" height="40" src="/icon/<?=$model['icon_name']?>">
+                    </div>
+                    <?php else:?>
+                    <div class="fileUpload btn btn-primary">
+                        <span>Upload</span>
+                        <input type="file" class="upload" accept="image/*" />
+                    </div>
+                </td>
+                <?php endif; ?>
+                <td class="model-name"><?=$model['model']?></td>
+                <td class="port-set">
+                    <?php if($model['port_list'] !== '0'):?>
+                        <?php foreach( $model['port_list'] as $id_port => $name):?>
+                         <div class="port"><?=$name?></div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </td>
+                <td class="hide-td" title="edit"><span class="glyphicon glyphicon-edit edit-model"></span></td>
+                <td class="hide-td" title="remove entry"><span class="glyphicon glyphicon-remove remove"></span></td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+    </div>
+    <script src="/js/models.js"></script>
+    <script src="/js/upload.js"></script>
+

@@ -1,0 +1,14 @@
+<table class="table no-border virt-hosts">
+    <tr>
+        <th>Ip</th>
+        <th>Host</th>
+        <th>OS</th>
+    </tr>
+    <?php foreach( $virts as $id_virt => $virt):?>
+    <tr>
+        <td><?=$virt['virt_ip']?></td>
+        <td><?=$virt['virt_host']?></td>
+        <td><?=$virt['os']?></td>
+    </tr>
+    <?php endforeach;?>
+</table>

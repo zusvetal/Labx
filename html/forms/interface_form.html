@@ -1,0 +1,106 @@
+<div id="addForm" class="border">
+    <div id="intForm">
+        <?php if(!empty($ints)):?>
+        <?php foreach( $ints as $id_int => $int):?>
+        <div class="interface" data-id-interface="<?=@$id_int?>" >
+            <button type="button" class="close field remove-interface"><span>&times;</span></button>
+            <table class="table no-border">
+                <tr>
+                    <td class="name">IP:</td>
+                    <td>
+                        <input name="ip" type="text" class="form-control ip" value="<?=@$int['ip']?>"> 
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">Hostname:</td>
+                    <td>
+                        <input name="host" type="text" class="form-control hostname" value="<?=@$int['host']?>">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">Type:</td>
+                    <td class="type">
+                        <select name="id_type" class="form-control int-type">
+                            <option value="1" <?php echo($int['id_type']==='1')?'selected':''?> >Physical</option>
+                            <option value="3" <?php echo($int['id_type']==='3')?'selected':''?> >Hypervisor</option>
+                        </select>
+                    </td> 
+                </tr>
+            </table>
+            <div class="info-field"></div>
+            <?php if(!empty($int['virtual'])):?>
+            <?php foreach( $int['virtual'] as $id_virtual_mashine => $virt):?>
+            <div class="virt" data-id-virtual-mashine="<?=$id_virtual_mashine?>">
+                <button type="button" class="close field remove-virtual"><span>&times;</span></button>
+                <table class="table no-border">
+                    <tr>
+                        <td class="name">Ip:</td>
+                        <td>
+                            <input name="virt_ip" type="text" class="form-control" value="<?=$virt['virt_ip']?>"> 
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="name">Hostname:</td>
+                        <td>
+                            <input name="virt_host" type="text" class="form-control" value="<?=$virt['virt_host']?>">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="name">OS:</td>
+                        <td>
+                            <input name="os" type="text" class="form-control" value="<?=$virt['os']?>">
+                        </td>
+                    </tr>
+                </table>
+                <div class="info-virt-field"></div>
+            </div>
+            <?php endforeach; ?>
+            <div class="wrap-add-virtual" align="right">
+                <a class="btn a-btn add-virtual"><span class="glyphicon glyphicon-plus small black"></span>Add virtual host</a>
+            </div>
+            <?php else:?>
+            <div class="wrap-add-virtual" align="right">
+            </div>
+            <?php endif; ?>
+            
+        </div>
+        <?php endforeach; ?>
+        <?php else:?>
+        <div class="interface" data-id-interface="0" >
+            <button type="button" class="close field remove-interface"><span>&times;</span></button>
+            <table class="table no-border">
+                <tr>
+                    <td class="name">IP:</td>
+                    <td>
+                        <input name="ip" type="text" class="form-control ip" value=""> 
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">Hostname:</td>
+                    <td>
+                        <input name="host" type="text" class="form-control hostname" value="">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">Type:</td>
+                    <td class="type">
+                        <select name="id_type" class="form-control int-type">
+                            <option value="1">Physical</option>
+                            <option value="3">Hypervisor</option>
+                        </select>
+                    </td> 
+                </tr>
+            </table>
+            <div class="wrap-add-virtual" align="right"></div>
+            <div class="info-field"></div>
+        </div>
+        <?php endif; ?> 
+        <a class="btn a-btn add-interface" ><span class="glyphicon glyphicon-plus black small"></span>  Add interface</a>
+        <div align="right">
+            <button type="button" class="btn btn-primary submit">Submit</button>
+        </div> 
+    </div>
+</div>
+
+
+

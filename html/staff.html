@@ -1,0 +1,58 @@
+<div id="content">
+    <!-- Modal -->
+    <div id="editStaff"></div>
+    <!--/Modal-->
+    <!-- Modal -->
+    <div id="addNewStaff"></div>
+    <!--/Modal-->
+    <div class="staff-table">
+        <h1>Staff </h1>
+        <?php if($_SESSION['level']=='0'):?>
+        <a class="btn a-btn add-team">New team</a>
+        <a class="btn a-btn add-employee">New employee</a>
+        <br><br>
+        <?php endif;?>
+        <table id="staffTable" class="table  table-bordered" >
+            <tr class="">          
+                <th></th>
+                <th>Team</th>
+            </tr>
+            <?php if(!empty($teams)):?>
+            <?php $num=0;?>
+            <?php foreach( $teams as $team):?>
+            <?php ++$num;?>
+            <tr class="team <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-team="<?=$team['id_team']?>">
+                <td class="number"><?=$num?></td>
+                <td class="team-name"><?=$team['team_name']?></td>                
+                <?php if($_SESSION['level']=='0'):?>
+                    <td class="hide-td" title="edit team"><span class="glyphicon glyphicon-edit edit-team"></span></td>
+                    <td class="hide-td" title="remove team"><span class="glyphicon glyphicon-remove remove-team"></span></td>
+                <?php endif;?>
+            </tr>
+            <?php if(!empty ($team['staff'])):?>
+            <tr>
+                <td colspan="2" class="hide-td bottom-border" >
+                    <table class="table table-bordered" >
+                        <?php foreach( $team['staff'] as  $id_staff => $staff):?> 
+                        <tr  class="staff" data-id-employee="<?=$id_staff?>">
+                            <td>•</td>
+                            <td><?=$staff['employee_name']?> </td>
+                            <?php if($_SESSION['level']=='0'):?>
+                                <td class="hide-td" title="edit"><span class="glyphicon glyphicon-edit edit-employee"></span></td>
+                                <td class="hide-td" title="remove"><span class="glyphicon glyphicon-remove remove-employee"></span></td>
+                            <?php endif;?>
+                        </tr>
+                        <?php endforeach; ?>
+                    </table>
+                </td>
+                <td class="hide-td"></td>
+            </tr>
+            <?php endif;?>
+            <?php endforeach; ?>
+        <?php else:?>
+            <h4>People not found </h4>
+        <?php endif;?>
+        </table>    
+    </div>   
+</div>
+<script src="/js/staff.js"></script>

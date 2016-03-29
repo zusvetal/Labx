@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <title>LabX</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="shortcut icon" href="/img/title.png" type="image/x-icon"/>     
+        <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+        <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="/bower_components/bootbox.js/bootbox.js"></script>
+        <script src="/outerLibrary/ajaxupload.js"></script>
+        <script src="/bower_components/summernote/dist/summernote.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="/bower_components/summernote/dist/summernote.css">
+        <script src="/js/home.js"></script>
+        <link rel="stylesheet" type="text/css" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="/css/home.css">
+    </head>
+    <body>
+        <div id="container">
+            <nav class="navbar navbar-default navbar-fixed-top">
+                <div class="container-fluid">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">                              
+                             <img alt="Brand" src="/img/harmonic-login2.png">
+                             <b class="small"><?=$_SESSION['location']?></b>
+                        </a>                       
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav link">
+                            <li><a href="/stock/devices" >Stock </a></li>
+                            <li>
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Location<span class="caret"></span></a> 
+                                <ul class="dropdown-menu" role="menu">
+                                    <li ><a href="/labdesks">Labdesks</a></li>
+                                    <?php foreach( $_SESSION['lab_list'] as $id_lab => $lab):?>
+                                        <li><a href="/lab/<?=$id_lab?>"><?=$lab['lab_name']?></a></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </li>
+<!--                            <li ><a href="/racks">Racks</a></li>-->                           
+                            <?php if($_SESSION['level']=='0'):?>
+                                <li>
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Models <span class="caret"></span></a> 
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="/models/device">Device models</a></li>
+                                        <li><a href="/models/module">Card/Module models</a></li>
+                                    </ul>
+                                </li>
+                                <li ><a href="/rack_list">Rack list</a></li>
+                                <li ><a href="/labdesk_list">Labdesk list</a></li>
+                                <li ><a href="/lab_list">Lab list</a></li>
+                            <?php endif;?>
+                            <li><a href="/staff" >People </a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><b><?=$_SESSION['name']?> <?=$_SESSION['surname']?></b> <span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li id="userOption">                      
+                                        <a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Log Out</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div><!-- /.navbar-collapse -->
+                </div><!-- /.container-fluid -->
+            </nav>
+            <script>
+                var arr=location.href.split("/"),
+                url=arr[arr.length-1];
+                $('[href="'+url+'"]').closest('li').addClass('active');               
+            </script>
+               

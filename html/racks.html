@@ -1,0 +1,24 @@
+<link rel="stylesheet" type="text/css" href="/css/racks.css">
+<div id="content">
+    <h2 align="center"><?=$lab_name?></h2>
+    <div id="racksMenu">
+        <span class="glyphicon glyphicon-info-sign show-all-racks-info"></span>
+        <span class="glyphicon glyphicon-resize-full show"></span>
+    </div>
+    <?php if(!empty($racks)):?>
+    <div id="racksWrap" data-id-lab="<?=$id_lab?>">
+        <?php foreach( $racks as $id_rack => $rack):?>
+        <a  class="rack front"  href="/lab/<?=$id_lab?>/rack/<?=$id_rack?>" 
+            data-id-rack="<?=$id_rack?>" data-id-back-rack="<?= $rack['id_back_rack']?>">
+            <h3 class="hidden"><?=$rack['name']?></h3>
+        </a>
+        <a class="rack back hidden" href="/lab/<?=$id_lab?>/rack/<?=$id_rack?>" 
+           data-id-rack="<?=$id_rack?>" data-id-back-rack="<?= $rack['id_back_rack']?>" ></a>
+        <?php endforeach; ?>
+    </div>
+    <?php else:?>
+    <center><h4>Racks not found</h4></center>
+    <?php endif;?>
+</div>
+<script src="/js/racks.js"></script>
+<script src="/js/rack.js"></script>

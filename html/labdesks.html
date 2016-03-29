@@ -1,0 +1,79 @@
+ 
+<div id="content">
+    <!-- Modal -->
+    <div id="addNewDeviceToLabdesk"></div>
+    <!--/Modal-->
+    <!-- Modal -->
+    <div id="deviceInformation"></div>
+    <!--/Modal-->
+    <!-- Modal -->
+    <div id="unusedDeviceList"></div>
+    <!--/Modal-->
+    <!-- upScroll -->
+    <p id="back-top">
+        <a href="#content"><span class="glyphicon glyphicon-arrow-up"></span></a>
+    </p>
+    <!-- /upScroll -->
+    <div id="labdeskField">
+        <?php if(!empty($labdesks)):?>
+        <?php foreach( $list as $id_labdesk => $labdesk):?>
+        <div class="labdesk" data-id-labdesk="<?=$id_labdesk?>">
+            <h2><?=$labdesk['name']?></h2>
+            <?php if($_SESSION['level']=='0'):?>
+                <span class="add glyphicon glyphicon-plus"></span>
+            <?php endif;?>
+            <table class="table table-hover table-bordered">
+                <tr class="item">
+                    <th></th>
+                    <th>Model</th>
+                    <th>IP</th>
+                    <th>Host</th>
+                </tr>
+                <?php $num=0;?>
+                <?php if(!empty($labdesk['devices'])):?>
+                <?php foreach( $labdesk['devices'] as $id_device_in_labdesk => $device):?>
+                <?php ++$num;?>
+                <tr class="item labdesk-device" data-id-device-in-labdesk="<?=$id_device_in_labdesk?>" data-id-device="<?=$device['id_device']?>">
+                    <td class="number"><?=$num?></td>
+                    <td class="value  model" data-item="model"><?=$device['model']?></td>
+                    <td class="value ip edit">
+                        <?php if( !empty($device['interfaces'])):?>
+                            <?php foreach( $device['interfaces'] as $id_int => $int):?>
+                                <span class="ip-interface <?php echo !empty($int['virt'])?'virt-host':''?>" data-toggle="popover" data-id-interface="<?=$id_int?>">
+                                    <?=$int['ip']?>
+                                </span>
+                            <?php endforeach; ?>
+                        <?php endif;?>
+                        <?php if($_SESSION['level']=='0'):?>
+                            <span class="glyphicon glyphicon-edit td-icon update-ip"></span>
+                        <?php endif;?>    
+                    </td>
+                    <td class="int" data-item="host">
+                        <?php if( !empty($device['interfaces'])):?>
+                            <?php foreach( $device['interfaces'] as $id_int => $int):?>
+                                <span class="host" ?>
+                                    <?=$int['host']?>
+                                </span>
+                            <?php endforeach; ?>
+                        <?php endif;?>
+                    </td>   
+                    <td class="hide-td2 status">
+                        <?php echo $device['id_device'] === '0' ? '<span class="warning glyphicon glyphicon-warning-sign" data-id-device-in-labdesk="'.$id_device_in_labdesk.'"><span>':'<span class="info glyphicon glyphicon-info-sign" data-id-device="'.$device['id_device'].'"><span>' ?>
+                    </td>
+                    <td class="hide-td2">
+                        <?php if($_SESSION['level']=='0'):?>
+                            <span class="glyphicon glyphicon-remove remove"></span>
+                        <?php endif;?>
+                    </td>
+                </tr>               
+                <?php endforeach; ?>
+                <?php endif;?>
+            </table>
+        </div>
+        <?php endforeach; ?>
+        <?php else:?>
+        <h4>Not found</h4>
+        <?php endif;?>
+    </div>
+</div>
+<script src="/js/labdesks.js"></script>

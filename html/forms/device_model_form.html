@@ -1,0 +1,61 @@
+<div id="addForm" class="border ">
+    <!--<button type="button" id="closeForm" class="close"><span>&times;</span></button>-->
+    <table id="deviceModelForm" class="table no-border">
+        <tr>
+            <td class="lable"> Model name:</td>
+            <td id="name"><input name="model" type="text" class="value form-control"></td>
+        </tr>
+        <tr>
+            <td>Form factor:</td>
+            <td id="formFactor">
+                <select  name="id_formfactor" class="form-control form-factor">
+                    <option value="1">Rack</option>
+                    <option value="2">Tower</option>
+                    <option value="3">Other</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Size (units):</td>
+            <td id="size"><input name="size_in_unit" type="text" class="value form-control"></td>
+        </tr>
+        <tr>
+            <td>Type:</td>
+            <td id="type"></td>
+        </tr>
+        <tbody id="pn">
+            <tr>
+                <td>Part number:</td>
+                <td class="pn">
+                    <span class="glyphicon glyphicon-plus add-pn small"></span>
+                    <input name="model_pn" data-id-pn="0" type="text" class="value form-control">
+                    <span class="glyphicon glyphicon-remove small remove-pn"></span>
+                </td>
+            </tr>
+        </tbody>
+        <tr>
+            <td id="imgTd" colspan="2">
+                <h4>Image of device</h4>
+                <div id="imgField" data-icon="">
+                    <div class="fileUpload btn btn-primary">
+                        <span>Upload</span>
+                        <input type="file" class="upload-img" accept="image/*" />
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" >           
+                <center><b>Description for model</b></center>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" >           
+                <div id="comment"></div>
+            </td>
+        </tr>
+    </table>
+    <div align="right">       
+        <button id="submitModel" type="button" class="btn btn-primary submit-model">Submit</button>
+    </div>   
+</div>

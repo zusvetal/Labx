@@ -1,0 +1,30 @@
+<?php if(!empty($info['icon_name'])):?>
+    <div align="center">
+        <img class="device-img" src="/icon/<?=$info['icon_name']?>">
+    </div>
+<?php endif;?>
+<table class=" table table-bordered">
+    <tr>
+        <td>S/N</td>
+        <td data-item="sn"> <?=$info['sn']?></td>
+    </tr>
+    <tr>
+        <td>Harmonic barcode</td>
+        <td data-item="asset_harmonic"> <?=$info['asset_harmonic']?></td>
+    </tr>
+<!--    <tr>
+        <td>GL barcode</td>
+        <td data-item="asset_harmonic"> <?=$info['asset_gl']?></td>
+    </tr>-->
+</table>
+<div class="section-header ">
+    <a class=" collapsed" data-toggle="collapse"  href="#deviceDescriptionCollapse" aria-expanded="true" aria-controls="deviceDescriptionCollapse">
+  Device description
+    </a>
+  <span class="glyphicon glyphicon-chevron-down arrow"></span>
+  <span class="glyphicon glyphicon-save save hide" data-toggle="tooltip" data-placement="bottom" title="Save description"></span>
+  <span class="glyphicon glyphicon-edit write" data-toggle="tooltip" data-placement="bottom" title="Edit"></span>
+</div>
+<div id="deviceDescriptionCollapse" class="section-content well collapse in">
+    <p><?=$info['comment']?></p>
+</div>

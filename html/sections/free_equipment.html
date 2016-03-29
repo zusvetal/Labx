@@ -1,0 +1,27 @@
+<?php if(!empty($equipment_list)):?>
+<table id="unusedDeviceTable" class="table table-hover table-bordered pointer">
+    <tr>
+        <th>Device model</th>
+        <th>Harmonic asset</th>
+        <th>GL Asset</th>
+        <th>S/N</th>
+        <th>P/N</th>
+        <th>Owner</th>
+    </tr>
+    <?php foreach( $equipment_list as $id => $element):?> 
+    <tr  data-id-element="<?=$id?>">
+        <td  data-item="model"><?=$element['model']?> </td>
+        <td  data-item="asset_harmonic"><?=$element['asset_harmonic']?> </td>  
+        <td  data-item="asset_gl"><?=$element['asset_gl']?> </td>
+        <td  data-item="sn"><?=$element['sn']?> </td>
+        <td  data-item="pn"><?=$element['pn']?> </td>
+        <td  data-item="owner"><?=$element['employee_name']?> </td>
+    </tr>
+    <?php endforeach; ?>
+</table>
+<?php else: ?>
+<h4 align="center">No device in the stock </h4>
+<?php endif; ?>
+<div align="right">
+    <button type="button" style="display:none" class="btn btn-primary bind">Bind</button>
+</div>

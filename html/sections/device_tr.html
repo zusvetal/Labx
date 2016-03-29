@@ -1,0 +1,42 @@
+<tr class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-device="<?=$device['id_device']?>" data-id-location="<?=$device['id_location']?>">
+    <?php if($_SESSION['level']=='0'):?>
+    <td class="hide-td right-border">
+        <?php if(!empty ($device['modules'])):?>
+        <span class="glyphicon glyphicon-chevron-down show-modules" title="show modules"></span>
+        <?php endif;?>
+    </td>               
+    <?php endif;?>
+    <td class="number"></td>
+    <td class="ip" data-item="host"></td>
+    <td class="ip" data-item="ip"></td>
+    <td class="value device model" data-item="model"><?=$device['model']?> </td>
+    <td class="value device" data-item="asset_harmonic"><?=$device['asset_harmonic']?> </td>  
+    <td class="value device" data-item="asset_gl"><?=$device['asset_gl']?> </td>
+    <td class="value device" data-item="sn"><?=$device['sn']?> </td>
+    <td class="value device owner" data-item="owner"><?=$device['employee_name']?> </td>
+    <td class="value device team" data-item="team"><?=$device['team_name']?> </td>
+    <td class="status hide-td">
+        <?php if($device['id_location']==='1'):?>
+        <span class="glyphicon infoRack" data-id-device-in-rack="<?=$device['id_device_in_rack']?>">
+            rack
+        </span>
+        <?php elseif ($device['id_location']==='2'):?>
+        <span class="glyphicon" data-id-device-in-labdesk="<?=$device['id_device_in_labdesk']?>">
+            labdesk
+        </span>
+        <?php elseif ($device['id_location']==='3'):?>
+        <span class="glyphicon" data-id-device-on-hand="<?=$device['id_device_on_hand']?>">
+            on hand
+        </span>
+        <?php elseif ($device['id_location']==='4'):?>
+        <span class="glyphicon">
+            storage
+        </span>
+        <?php endif;?>
+    </td>
+    <td class="hide-td icon"><span class="glyphicon glyphicon-info-sign info info-device"  data-id-device="<?=$device['id_device']?>"></span></td>
+    <?php if($_SESSION['level']=='0'):?>
+    <td class="hide-td icon"><span class="glyphicon glyphicon-edit edit-device"></span></td>
+    <td class="hide-td icon"><span class="glyphicon glyphicon-remove remove-device"></span></td>
+    <?php endif;?>
+</tr>

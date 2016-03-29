@@ -1,0 +1,19 @@
+<div id="dropDown" class="row">
+    <div class="col-lg-8">
+        <div class="input-group">
+            <input  id="searchInput" type="text" class="form-control search-element" data-id-element="0">
+            <div class="input-group-btn">
+                <button type="button" class="btn btn-default search-element">
+                    <span class="caret"></span>
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right search-element-list">
+                    <?php foreach( $elements as $id_element => $name):?>
+                    <li><a href="#searchInput" data-id-element="<?=$id_element?>"><?=$name?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div><!-- /btn-group -->
+        </div><!-- /input-group -->
+    </div><!-- /.col-lg-8 -->
+</div><!-- /.row -->
+<!--script src="/js/models_dropdown.js"></script-->

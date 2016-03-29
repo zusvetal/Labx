@@ -1,0 +1,32 @@
+.port-set{
+    cursor:pointer !important;
+}
+#portList{
+    width:55%;
+}
+#portSet{
+    width: 45%;
+}
+tr.center{
+    text-align: center;
+}
+input.add-port{
+    width: 60px;
+    padding: 0;
+    float: left;
+    margin: 1px;
+    text-align: center;
+}
+
+div.img{
+    width: 140px;
+    height:40px;
+    cursor:pointer;
+}
+div.img button{
+    display:none;
+}
+
+div.img:hover button{
+    display: block;
+}

@@ -1,0 +1,11 @@
+<tr  class="module" data-id-module="<?=$module['id_module']?>">
+    <td></td>
+    <td>•</td>
+    <td  data-item="model"><?=$module['model']?> </td>
+    <td  data-item="asset_harmonic" title="Harmonic barcode"><?=$module['asset_harmonic']?> </td>  
+    <td  data-item="sn" title="Serial Number"><?=$module['sn']?> </td> 
+    <td  data-item="pn" title="Part Number"><?=$module['pn']?> </td>
+    <?php if($_SESSION['level']=='0'):?>
+    <td class="hide-td"><span class="glyphicon glyphicon-remove unbind"></span></td>
+    <?php endif;?>
+</tr>
