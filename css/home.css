@@ -292,6 +292,27 @@ span.point{
 span.glyphicon-play-circle{
     color: rgba(0, 144, 255, 0.6);
 }
+td .glyphicon{
+    font-size: 16px;
+    margin: 0;
+}
+td.edit{
+    position:relative;
+}
+
+td.edit span.td-icon{
+    font-size:12px;
+    position: absolute;
+    right:5px;
+    top:5px;
+
+}
+td.edit span.td-icon-small{
+    font-size:9px;
+    position: absolute;
+    right:3px;
+    top:3px;
+}
 
 /*******************************************************************************/
 /********************* Insert new device to rack *****************************/
@@ -328,7 +349,9 @@ table.pointer{
 /*******************************************************************************/
 .hide-td{
     background-color: white !important;
-    border: 1px solid white !important;     
+    border: 1px solid white !important;
+    border-bottom: 1px solid white !important;
+    border-top: 1px solid white !important;
     width: 35px;
 }
 .hide-td2{
@@ -472,7 +495,8 @@ td.link{
    top:80px;   
 }
 
-#fullRack a.left-nav span,#fullRack a.right-nav span {
+#fullRack a.left-nav span,
+#fullRack a.right-nav span {
    font-size: 30px; 
 }
 #fullRack a.right-nav{
@@ -482,24 +506,14 @@ td.link{
    font-size: 30px;
     
 }
-.tower .edit-tower{
-    display:none;
-}
-.tower:hover .edit-tower{
-    display:inline;
-}
-.tower .edit{
-    position: relative;
-}
-
-td.edit span.edit-tower{
+#rackTable td.edit span.edit-tower{
     font-size:10px;
     position: absolute;
     right:5px;
     top:5px;
 
 }
-.unit td{
+#rackTable .unit td{
     text-align: center;
     cursor: pointer;
 }
@@ -507,21 +521,14 @@ td.edit span.edit-tower{
 .empty{
     background-color:  white;
 }
-.full {
+#rackTable .full  td.fill{
     background-color: rgba(0, 153, 236, 0.2);
 
 }
-.number-of-unit{
+#rackTable .number-of-unit{
     width: 5%;
-    background: white
-}
-.mng-ip{
-    //  width: 30%;
 }
 
-.model{
-    //    width: 40%;
-}
 .ip-interface{
     font-size:15px;
     font-weight: 500;
@@ -530,6 +537,7 @@ td.edit span.edit-tower{
 .ip-interface:hover{
     font-weight: 600;
 }
+
 .virt-host{
    position:relative;
    background-color: rgba(58, 127, 70, 0.5);
@@ -566,7 +574,17 @@ td.edit span.edit-tower{
     margin: 0;
 
 }
-.tower{
+#rackTable .tower .edit-tower{
+    display:none;
+}
+#rackTable .tower:hover .edit-tower{
+    display:inline;
+}
+#rackTable .tower .edit{
+    position: relative;
+}
+
+#rackTable .tower{
     position: relative;
     height: 400px;
     width:30%;
@@ -576,50 +594,32 @@ td.edit span.edit-tower{
     text-align: center;
 
 }
-.remove-tower{
+ #rackTable .remove-tower{
     margin: 5px;
 }
-.tower .close{
+#rackTable .tower .close{
     margin: 5px;
 }
-.tower .info, .tower .warning{
+#rackTable .tower .info,
+#rackTable .tower .warning{
     position: absolute;
     margin: 5px;
     left: 0px;
     font-size: 14px;
 }
-.wrap-add-tower{
+#rackTable .wrap-add-tower{
     margin-bottom: 3px;
 }
 
-td .glyphicon{
-    font-size: 16px;
-    margin: 0;
-}
-td.edit{
-    position:relative;
-}
 
-td.edit span.td-icon{
-    font-size:12px;
-    position: absolute;
-    right:5px;
-    top:5px;
 
-}
-td.edit span.td-icon-small{
-    font-size:9px;
-    position: absolute;
-    right:3px;
-    top:3px;
-}
-
-span.book,span.edit{
+#rackTable span.book,
+#rackTable span.edit{
     font-size: 40px;
 }
 
 
-.shelf{
+#rackTable .shelf{
     text-align: center;
     font-weight: 700;
     background: rgba(183,222,237,1);
@@ -632,7 +632,7 @@ span.book,span.edit{
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b7deed', endColorstr='#b7deed', GradientType=1 );
 }
 
-.patchpanel{
+#rackTable .patchpanel{
     text-align: center;
     font-weight: 700;
     background: rgb(230,240,163); /* Old browsers */
@@ -645,16 +645,6 @@ span.book,span.edit{
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e6f0a3', endColorstr='#dbf043',GradientType=0 ); /* IE6-9 */
 }
 
-#getInfoButton{
-    margin-bottom: 10px;
-}
-
-
-#writeComment{
-    margin: 5px;
-    display: block;
-    alignment-adjust: central;
-}
 
 .section-header{
     position: relative;
@@ -706,35 +696,64 @@ table.patch td.number{
 table.patch td.descr{
     cursor:pointer;
 }
+#rackTable tbody td.status,
+#rackTable tbody th.hide-td{
+    border: solid 3px white !important;
+    border-left:  solid 3px #ccc !important;
+}
+#rackTable tbody td.right-border,
+#rackTable tbody th.right-border{
+    border: solid 3px white !important;
+    border-right:  solid 3px #ccc !important;
+}
+#rackTable tbody:nth-of-type(1) {
+    border-top:  solid 3px #ccc !important;
+
+}
+#rackTable tbody:nth-last-of-type(1){
+    border-bottom:  solid 3px #ccc !important;
+}
 
 /* device in rack*/
 
-tbody.device-in-rack:hover{
+#rackTable tbody.device-in-rack:hover{
     border-bottom:  solid 3px red !important;
     border-top:  solid 3px red !important;
 }
-tbody.device-in-rack:hover td.right-border{
+#rackTable tbody.device-in-rack:hover td.right-border{
     border: solid 3px white !important;
     border-right: solid 3px red !important;
 }
-tbody.device-in-rack:hover td.status{
+#rackTable tbody.device-in-rack:hover td.status{
     border: solid 3px white !important;
     border-left:  solid 3px red !important;
 }
 
-tbody.device-in-rack span.td-icon-small,
-tbody.device-in-rack span.td-icon{
+#rackTable tbody.device-in-rack span.td-icon-small,
+#rackTable tbody.device-in-rack span.td-icon{
     display: none
 }
-tbody.device-in-rack:hover span.td-icon-small,
-tbody.device-in-rack:hover span.td-icon{
+#rackTable tbody.device-in-rack:hover span.td-icon-small,
+#rackTable tbody.device-in-rack:hover span.td-icon{
     display: block;
 }
-.mark-device{
-    background: rgba(244, 73, 67, 0.2)!important;
+
+#rackTable span.info,
+#rackTable .tools span
+{
+    display:none;
 }
-.mark-device .full{
-    background: transparent;
+#rackTable tr.unit:hover span.info,
+#rackTable tr.unit:hover .tools span
+{
+    display:inline;
+}
+
+/*.mark-device{
+    background: rgba(244, 73, 67, 0.2)!important;
+}*/
+.mark-device .full .fill{
+    background: rgba(244, 73, 67, 0.2)!important;
 }
 
 
@@ -785,10 +804,13 @@ div.labdesk{
     box-shadow:         0px 0px 12px 0px rgba(225, 101, 85, 0.75);
 
 }
-tr.labdesk-device span.update-ip{
+#labdeskField tr.labdesk-device span.update-ip,
+#labdeskField tr.labdesk-device .hide-td2 span{
     display:none;
 }
-tr.labdesk-device:hover span.update-ip{
+ #labdeskField tr.labdesk-device:hover span.update-ip,
+ #labdeskField tr.labdesk-device:hover .hide-td2 span
+ {
     display:block;
 }
 /*******************************************************************************/
@@ -818,10 +840,10 @@ tr.team:hover .edit-team,tr.team:hover .remove-team
 /*******************************************************************************/
 /************************ models.html ******************************/
 /*******************************************************************************/
-#modelTable .edit-model{
+#modelTable .icon span{
     display:none;
 }
-#modelTable tr:hover .edit-model{
+#modelTable tr:hover .icon span{
     display:inline;
 }
 /*******************************************************************************/
@@ -922,8 +944,16 @@ tr.team:hover .edit-team,tr.team:hover .remove-team
     font-weight: 500;
     color:black;
 }
+td.act{
+    width: 25px !important;
+    padding: 10 0 0 5  !important; 
 
-
+}
+td.icon{
+    width: 25px !important;
+    padding: 10 0 0 5  !important; 
+    
+}
 
 #devicesTable .icon span,
 #devicesTable .update-ip,
@@ -932,6 +962,7 @@ tr.team:hover .edit-team,tr.team:hover .remove-team
 {
     display: none;
 }
+
 #devicesTable tr:hover .icon span,
 #devicesTable tr:hover .update-ip,
 #devicesTable tr:hover .edit-trans,
@@ -939,10 +970,13 @@ tr.team:hover .edit-team,tr.team:hover .remove-team
 {
     display:inline;
 }
-#devicesTable .item .icon{
-    width: 25px !important;
-    padding: 10 0 0 0; 
+#devicesTable .table-module .act span{
+    display: none;
 }
+#devicesTable .table-module tr:hover .act span{
+    display: inline;
+}
+
 #devicesTable tr.modules-list{
     display: none;
 }
@@ -972,6 +1006,7 @@ tr.team:hover .edit-team,tr.team:hover .remove-team
 #devicesTable .table-vm td[data-item="os"]{
     width:42%;
 }
+
 #devicesTable .table-vm .circle{
     width:3%;
     max-width: 30px;
@@ -979,13 +1014,11 @@ tr.team:hover .edit-team,tr.team:hover .remove-team
 #devicesTable .vm-field{
     padding-left: 60px;
 }
-#devicesTable .table-vm tr .remove-host,
-#devicesTable .table-vm tr .edit-host
+#devicesTable .table-vm .act span
 {
     display: none;
 }
-#devicesTable .table-vm tr:hover .remove-host,
-#devicesTable .table-vm tr:hover .edit-host
+#devicesTable .table-vm tr:hover .act span
 {
     display: inline;
 }
@@ -1055,11 +1088,11 @@ table.device-info .show-device-info:hover{
 {
     display:inline;
 }
-#modulesTable .item .icon{
+/*#modulesTable .item .icon{
     width: 15px !important;
     padding-left:3px;
     padding-right: 3px;
-}
+}*/
 
 /*******************************************************************************/
 /************************* Interfaces *****************************************/
@@ -1379,4 +1412,26 @@ background-color: rgba(140, 139, 255, 0.1);
 }
 #confirmWindow .modal-footer{
     text-align: center !important;
+}
+/*******************************************************************************/
+/******************************* Alert window ***************************/
+/*******************************************************************************/
+#alertWindow{
+background-color: rgba(197, 35, 31, 0.1);
+
+}
+#alertWindow .modal-dialog{ 
+    width: 20%;
+    margin: 350 auto;
+}
+#alertWindow .modal-footer{
+    text-align: center !important;
+}
+#alertWindow .modal-header{
+    background-color: rgba(254, 250, 54, 0.1);
+    text-align: center !important;
+}
+#alertWindow .modal-header span{
+    color: rgba(215, 215, 54, 0.9);
+    font-size: 30px !important;
 }

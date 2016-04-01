@@ -8,11 +8,11 @@
     <?php if(!empty($racks)):?>
     <div id="racksWrap" data-id-lab="<?=$id_lab?>">
         <?php foreach( $racks as $id_rack => $rack):?>
-        <a  class="rack front"  href="/lab/<?=$id_lab?>/rack/<?=$id_rack?>" 
+        <a  class="rack front"  href="/lab/<?=$rack['id_lab']?>/rack/<?=$id_rack?>" 
             data-id-rack="<?=$id_rack?>" data-id-back-rack="<?= $rack['id_back_rack']?>">
             <h3 class="hidden"><?=$rack['name']?></h3>
         </a>
-        <a class="rack back hidden" href="/lab/<?=$id_lab?>/rack/<?=$id_rack?>" 
+        <a class="rack back hidden" href="/lab/<?=$rack['id_lab']?>/rack/<?=$id_rack?>" 
            data-id-rack="<?=$id_rack?>" data-id-back-rack="<?= $rack['id_back_rack']?>" ></a>
         <?php endforeach; ?>
     </div>

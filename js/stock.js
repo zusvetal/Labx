@@ -1,49 +1,64 @@
 /******************************************************************************/
 /******************************* Search system ********************************/
 /******************************************************************************/
-var getSearchDevices=function(keys){
-
-    return $.post(
-            "/ajax",
+var getSearchDevices = function (keys) {
+    return $.get(
+            "/get_search_devices",
             {
-                get_search_devices: '1',
                 keys: keys
             },
     function (table) {
-      $('.item-table').html(table);
-      checkMenuOption();
-      checkViewOption();
+        setLocation(window.location.origin+window.location.pathname+this.url.replace('/get_search_devices', ''));
+        $('#infoField').html(table);
+        checkMenuOption();
+        checkViewOption();
     });
 };
-var getSearchModules=function(keys){
+var getSearchModules = function (keys) {
    
-  return $.post(
-            "/ajax",
+  return $.get(
+            "/get_search_modules",
             {
-                get_search_modules: '1',
                 keys: keys
             },
     function (table) {
+      setLocation(window.location.origin+window.location.pathname+this.url.replace('/get_search_modules', ''));
       $('.item-table').html(table);
       checkMenuOption();
       checkViewOption();
     });
 };
 var searchElements = function () {
-    var keys = {},
-            category = $('#category .choose2').attr('id');
-    $('div.search-field').each(function () {
-        var key = $(this).attr('id'),
-                value = $(this).find('.value').val();
-        keys[key] = value;
-    });
-    if (category === 'devices') {
-        getSearchDevices(keys);
+    var on = true;
+    function search() {
+        if (on) {     
+            var keys = {},
+                    category = $('#category .choose2').attr('id');
+            $('div.search-field').each(function () {
+                var key = $(this).attr('id'),
+                        value = $(this).find('.value').val();
+                keys[key] = value;
+            });
+            if (category === 'devices') {
+                getSearchDevices(keys);
+
+            }
+            else if (category === 'modules') {
+                getSearchModules(keys);
+            }
+        }
     }
-    else if (category === 'modules') {
-        getSearchModules(keys);
-    }   
+    search.on = function () {
+        on=true;
+    };
+    search.off=function(){
+        on=false;
+    };  
+    return search;
 };
+
+var search=searchElements();
+
 var checkMenuOption=function(){
     if($('a.transfer-status').hasClass('active')){
         showTransferStatus();
@@ -73,7 +88,7 @@ $('#content').on('click', 'a.key[data-key="id_location"]', function () {
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
         $('#id_location').remove();
-        searchElements();
+        search();
     }
     else {
         $btn.addClass('choose');
@@ -89,7 +104,7 @@ $('#content').on('click', 'a.key[data-key="id_location"]', function () {
                         </select>\
                     </div>\
         ');
-        searchElements();
+        search();
     }
 });
 
@@ -99,7 +114,7 @@ $('#content').on('click', 'a.key[data-key="status"]', function () {
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
         $('#status').remove();
-        searchElements();
+        search();
     }
     else {
         $btn.addClass('choose');
@@ -113,7 +128,7 @@ $('#content').on('click', 'a.key[data-key="status"]', function () {
                         </select>\
                     </div>\
         ');
-        searchElements();
+        search();
     }
 });
 
@@ -123,7 +138,7 @@ $('#content').on('click', 'a.key[data-key="vm"]', function () {
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
         $('#vm').remove();
-        searchElements();
+        search();
     }
     else {
         $btn.addClass('choose');
@@ -134,7 +149,7 @@ $('#content').on('click', 'a.key[data-key="vm"]', function () {
                         <input type="text"  class="hidden value" value="1"/>\
                     </div>\
         ');
-        searchElements();
+       search();
     }
 });
 
@@ -144,7 +159,7 @@ $('#content').on('click', 'a.key[data-key="id_transfer_status"]', function () {
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
          $('#id_transfer_status').remove();
-        searchElements();
+        search();
     }
     else {
         $btn.addClass('choose');
@@ -160,7 +175,7 @@ $('#content').on('click', 'a.key[data-key="id_transfer_status"]', function () {
                         </select>\
                     </div>\
         ');
-        searchElements();
+        search();
     }
 });
 
@@ -170,7 +185,7 @@ $('#content').on('click', 'a.key[data-key="id_work_status"]', function () {
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
          $('#id_work_status').remove();
-        searchElements();   
+        search();   
     }
     else {
         $btn.addClass('choose');
@@ -185,7 +200,7 @@ $('#content').on('click', 'a.key[data-key="id_work_status"]', function () {
                         </select>\
                     </div>\
         ');
-        searchElements();
+       search();
     }
 });
 
@@ -210,7 +225,7 @@ $('#content').on('click', 'a.key', function () {
         ');
 
         }
-        searchElements();
+       search();
     }
 });
 
@@ -221,7 +236,7 @@ $('#content').on('click', '.close-field', function () {
     $field.fadeOut(function(){
        $(this).remove();
        $('a.key[data-key="'+item+'"]').removeClass('choose');
-       searchElements();
+       search();
     });   
 });
 
@@ -230,7 +245,7 @@ $('#content').on('click', '.close-field', function () {
 /******************************************************************************/
 
 $('#content').on('keyup change', '#searchField .value', function () {
-    searchElements();
+    search();
 });
 /******************************************************************************/
 /***************************** Menu **************************************/
@@ -294,7 +309,7 @@ $('#menuField').on('click', '.transfer-status', function () {
         $('[data-key="id_transfer_status"]').remove();
         $('#id_transfer_status').remove();
         hideTransferStatus();
-        searchElements();
+       search();
     }
     else {
         $('#keyList').append('<a  class="btn a-btn key single" data-key="id_transfer_status">Transfer</a>');
@@ -330,7 +345,7 @@ var workingStatus = function ($btn) {
         $('[data-key="id_work_status"]').remove();
         $('#id_work_status').remove();
         hideWorkStatus();
-        searchElements();
+        search();
     }
     else {
         $btn.addClass('active');
@@ -358,4 +373,39 @@ $('#viewField').on('click', function (e) {
         $('table .' + item).fadeIn();
     }
 });
+/******************************************************************************/
+/***************************** Init settings **********************************/
+/******************************************************************************/
+var getKeys = function () {
+    console.log(window.location.search.substring(1));
+    var str = decodeURIComponent(window.location.search.substring(1)),
+            keys = [];
+    if (str === '')
+        return false;
+    str = str.replace(/\[/g, '["')
+            .replace(/\]/g, '"]')
+            .replace(/\&/g, '"&')
+            .replace(/\=/g, '="')
+            .replace(/\&/g, ';');
+    str=str+'"';
+    eval(str);
+    return keys;
+};
 
+var keys = getKeys();
+search.off();
+if (keys) {
+    for (var key in keys) {
+        if (key === 'id_transfer_status') {
+            $('#menuField .transfer-status').click();
+        }
+        if (key === 'id_work_status') {
+            $('#menuField .work-status').click();
+        }
+            $('[data-key="' + key + '"]').click();
+            $('#' + key).find('input').val(keys[key]);
+            $('#' + key).find('select').find('[value="'+keys[key]+'"]').attr('selected','selected');
+    }
+}
+search.on();
+search();

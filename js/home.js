@@ -30,7 +30,7 @@ var updateValueList = function (table, values, where_col, where_value, callback)
             },
     function (data) {
         if (data.trim() !== '1') {
-            alert('Error - ' + data);
+            $.alert('Error - ' + data);
         }
         else if (typeof callback !== 'undefined') {
             callback(data);
@@ -1609,7 +1609,6 @@ var Form = function (type, callback) {
     var param,
             idGlobalLocation = getIdGlobalLocation();
     this.type = type;
-
     if (this.type === 'device' || this.type === '') {
         param = {
             tableModel: 'device_model',
@@ -1732,7 +1731,7 @@ var Form = function (type, callback) {
         var $parentEl = this.$parentEl,
                 action = this.action,
                 idElement = this.id,
-                modelForm = new ModelForm('device'),
+                modelForm = new ModelForm(param.type),
                 dfd = jQuery.Deferred();
         $parentEl.on('click.form', 'button.submit', function () {
             var $btn = $(this),
@@ -3178,7 +3177,10 @@ $.ajaxSetup({
     timeout: 10000,
     error: function (jqXHR, textStatus, errorThrown) {
         console.log(textStatus, errorThrown, jqXHR.responseText);
-        alert(textStatus + '-------' + errorThrown + '----' + jqXHR.responseText);
+        $.alert(textStatus + '-------' + errorThrown + '----' + jqXHR.responseText)
+                .then(function () {
+                    $('#modalWindow').css('overflow-y', 'auto');
+                });
     }
 });
 /*Check  user loging*/
@@ -3223,35 +3225,6 @@ $(document).ready(function () {
         });
     });
 });
-
-
-
-//$(document).ready(function () {
-//    $(document).on('click', '.section-header', function (e) {
-//        var $header = $(this),
-//                $targetEl = $(e.target),
-//                $edit = $header.find('.write'),
-//                $content = $header.find('+.section-content');
-//        if (!$content.hasClass('show')) {
-//            $header.find('.arrow')
-//                    .removeClass('glyphicon-chevron-up')
-//                    .addClass('glyphicon-chevron-down');
-//            $content.slideDown(function () {
-//                $edit.removeClass('hide');
-//                $(this).addClass('show');
-//            });
-//
-//        } else {
-//            $header.find('.arrow')
-//                    .removeClass('glyphicon-chevron-down')
-//                    .addClass('glyphicon-chevron-up');
-//            $content.slideUp(function () {
-//                $edit.addClass('hide');
-//                $(this).removeClass('show');
-//            });
-//        }
-//    });
-//});
 
 /******************************************************************************/
 /*************************  Activate tooltips *********************************/
@@ -3341,4 +3314,40 @@ $(document).ready(function () {
     $.altConfirm();
 });
 
-
+/******************************************************************************/
+/*************************  Alert modal window *****************************/
+/******************************************************************************/
+jQuery.alert = function (dialog, callback) {
+    var deferred = jQuery.Deferred();
+    var box = '<div id="alertWindow" class="modal static"  data-backdrop="static" tabindex="-1" role="dialog">\
+                <div class="modal-dialog info">\
+                    <div class="modal-content">\
+                        <div class="modal-header">\
+                            <span class="glyphicon glyphicon-alert"></span>\
+                        </div>\
+                        <div class="modal-body"> </div>\
+                        <div class="modal-footer">\
+                            <button type="button" class="btn btn-primary ok"  data-dismiss="modal">Ok</button>\
+                        </div>\
+                    </div>\
+                </div>\
+            </div>'
+    $('body').append(box);
+    $('#alertWindow .modal-body').html(dialog.replace(/\n/, "<br />"));
+    $('#alertWindow.modal').modal();
+    $('#alertWindow .ok').off('click');
+    $('#alertWindow .ok').on('click', function () {       
+        $('#alertWindow').off('hidden.bs.modal');
+        $('#alertWindow').on('hidden.bs.modal', function (e) {
+            if (typeof callback !== 'undefined') {
+                callback(true);
+            }
+            /*if exist open modal window - scroll to this window*/
+            deferred.resolve();
+            $('#alertWindow').remove();
+        });
+        $(this).modal('hide');      
+    });
+    return  deferred.promise();
+};
+console.log(window.location)

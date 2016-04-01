@@ -35,15 +35,16 @@ function authenticate($username, $password) {
         @ldap_close($ldap);
         set_access_level();
         
-//        if(isset($_SESSION['last_route'])) {
-//            $lastRoute = $_SESSION['last_route'];
-//            unset($_SESSION['last_route']);
-//            
-//            return $lastRoute;
-//        }
-//        
+        if(isset($_SESSION['last_route'])) {
+            $lastRoute = $_SESSION['last_route'];
+            unset($_SESSION['last_route']);
+            
+            return $lastRoute;
+        }
+        
         return true;
     } else {
+        
         return false;
     }
 }

@@ -9,28 +9,52 @@ $app = new \Slim\App;
 $app->add(function ($request, $response, $next) {
     session_start();
     include_once 'db.php';
-    
+    $uri=$_SERVER['REQUEST_URI'];
     // not logged in
     if (!isset($_SESSION['user'])) {
-        if ($request->isXhr() && $_SERVER['REQUEST_URI'] != '/login') {
+        if ($request->isXhr() && $uri != '/login') {
             echo 'user not logged already';
             exit();
         }
         /*if() prevent loop*/
-        if ($_SERVER['REQUEST_URI'] != '/login') {
+        if ($uri != '/login') {
+            $_SESSION['last_route']=$uri;
             return $response->withRedirect('/login');
         }
 
         return $next($request, $response);
     }
+    //Check route , add global prefix
+    DB::connect();
+    if (!isset($_SESSION['redirect'])&& !$request->isPost()&&!$request->isXhr() &&  !in_array($uri, ['/','/logout'])) {
+        $first = explode("/", $uri)[1];
+        $id_global_location = get_value('global_location', 'id_global_location', 'name', $first);
+        if ($id_global_location) {
+            $_SESSION['id_global_location'] = $id_global_location;
+            $_SESSION['redirect'] = $uri;
+            return $response->withHeader('location', $uri);
+        } else {
+            if(isset($_SESSION['id_global_location'])){
+                $global=strtolower(get_value('global_location', 'name', 'id_global_location', $_SESSION['id_global_location']));
+                echo $uri;
+                return $response->withHeader('location', '/'.$global.$uri);
+            }
+            echo 'not exist';
+        }
+    }else{
+        unset($_SESSION['redirect']);
+    }
+
 
     // logged in
+    
     if (isset($_SESSION['id_global_location'])) {
-        DB::connect();
+        
         $_SESSION['lab_list'] = get_lab_list();
         $_SESSION['location']=  get_value('global_location', 'name', 'id_global_location', $_SESSION['id_global_location']);
-        DB::disconnect();        
+               
     }
+   DB::disconnect(); 
     return $next($request, $response);
     
 });
@@ -64,57 +88,52 @@ $app->get('/', function ($request, $response, $args) {
 });
 
 $app->get('/hkv', function ($request, $response, $args) {
-    $_SESSION['id_global_location'] = '1'; //HKV
-    header('Location:/stock/devices');
-    return $response;
+//    $_SESSION['id_global_location'] = '1'; //HKV
+    return $response->withHeader('location', '/hkv/stock/devices');
 });
 
 $app->get('/hvs', function ($request, $response, $args) {
-    $_SESSION['id_global_location'] = '2'; //HVS
-    header('Location:/stock/devices');
+//    $_SESSION['id_global_location'] = '2'; //HVS
+    header('Location:/hvs/stock/devices');
 
     return $response;
 });
-$app->get('/lab/{id_lab}', function ($request, $response, $args) {
+$app->get('/{global}/lab/{id_lab}', function ($request, $response, $args) {
     $id_lab = $args['id_lab'];
     include 'racks.php';
     return $response;
 });
-$app->get('/lab/{id_lab}/rack/{id_rack}', function ($request, $response, $args) {
-   
+$app->get('/{global}/lab/{id_lab}/rack/{id_rack}', function ($request, $response, $args) {  
     $id_lab = $args['id_lab'];
     $id_choose_rack = $args['id_rack'];
-//    $rack_name = get_value('rack', 'name', 'id_rack', $id_rack);
-//    $id_back_rack = get_value('rack', 'id_back_rack', 'id_rack', $id_rack);
     $racks=  get_front_rack_list($id_lab);
     
     include_once 'html/navbar.html';
-//    include_once 'html/rack_full.html';
     include_once 'html/racks_carusel.html';
-    include_once 'html/footer.html';
+    include_once 'html/footer.html'; 
     return $response;
 });
 
-$app->get('/labdesks', function ($request, $response, $args) {
+$app->get('/{global}/labdesks', function ($request, $response, $args) {
     include 'labdesks.php';
     return $response;
 });
-$app->get('/stock', function ($request, $response, $args) {
+$app->get('/{global}/stock', function ($request, $response, $args) {
     include 'stock.php';
     return $response;
 });
 
-$app->get('/stock/devices', function ($request, $response, $args) {
+$app->get('/{global}/stock/devices', function ($request, $response, $args) {
     
     include 'devices.php';
     return $response;
 });
 
-$app->get('/stock/cards', function ($request, $response, $args) {
+$app->get('/{global}/stock/cards', function ($request, $response, $args) {
     include 'cards.php';
     return $response;
 });
-$app->get('/models/{category}', function ($request, $response, $args) {
+$app->get('/{global}/models/{category}', function ($request, $response, $args) {
     $category = $args['category'];
     if ($_SESSION['level'] == '0') {
         include 'models.php';
@@ -123,7 +142,7 @@ $app->get('/models/{category}', function ($request, $response, $args) {
     }
     return $response;
 });
-$app->get('/rack_list', function ($request, $response, $args) {
+$app->get('/{global}/rack_list', function ($request, $response, $args) {
     if ($_SESSION['level'] == '0') {
         include 'rack_list.php';
     } else {
@@ -132,11 +151,11 @@ $app->get('/rack_list', function ($request, $response, $args) {
 
     return $response;
 });
-$app->get('/labdesk_list', function ($request, $response, $args) {
+$app->get('/{global}/labdesk_list', function ($request, $response, $args) {
     include 'labdesk_list.php';
     return $response;
 });
-$app->get('/lab_list', function ($request, $response, $args) {
+$app->get('/{global}/lab_list', function ($request, $response, $args) {
     if ($_SESSION['level'] == '0') {
         include 'lab_list.php';
     } else {
@@ -144,15 +163,12 @@ $app->get('/lab_list', function ($request, $response, $args) {
     }
     return $response;
 });
-$app->get('/staff', function ($request, $response, $args) {
+$app->get('/{global}/staff', function ($request, $response, $args) {
     include 'staff.php';
     return $response;
 });
 
-$app->post('/ajax', function ($request, $response, $args) {
-    include 'ajax.php';
-    return $response;
-});
+
 
 $app->post('/snmp/{model}', function ($request, $response, $args) {
     include 'snmp/' . $args['model'] . '.php';
@@ -163,7 +179,16 @@ $app->post('/xml/{model}', function ($request, $response, $args) {
     return $response;
 });
 
+include_once 'ajax_routing.php';
 
+$app->post('/ajax', function ($request, $response, $args) {
+    include 'ajax.php';
+    return $response;
+});
+$app->get('/ajax', function ($request, $response, $args) {
+    include 'ajax.php';
+    return $response;
+});
 // Run app
 $app->run();
 ?>

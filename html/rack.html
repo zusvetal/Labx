@@ -5,11 +5,11 @@
                 <?php if($_SESSION['level']=='0'):?>
                     <th class="hide-td right-border  tools"></th>
                 <?php endif;?>
-                <th>unit</th>
-                <th>mng_ip</th>
-                <th>model</th>
+                <th >unit</th>
+                <th >mng_ip</th>
+                <th >model</th>
                 <?php foreach( $rack_port_list as $id_port => $name):?>
-                <th><?=$name?></th>
+                <th ><?=$name?></th>
                 <?php endforeach; ?>
                 <th class="hide-td"></th>
             </tr>
@@ -121,7 +121,7 @@
                                 <?php echo ($device['full']=='1'&& $device['action']=='1')  ? '<span class="glyphicon glyphicon-pushpin td-icon-small"></span>' : ''?>                     
                             <?php endif;?>
                         </td>
-                        <td class="<?php echo ($device['full']=='1'&& $device['action']=='1')  ? 'edit' : ''?>  mng-ip" data-item="mng_ip">
+                        <td class="<?php echo ($device['full']=='1'&& $device['action']=='1')  ? 'edit' : ''?>  mng-ip fill" data-item="mng_ip">
                                 <?php if( !empty($device['interfaces'])):?>
                                     <?php foreach( $device['interfaces'] as $id_int => $int):?>
                                     <span class="ip-interface <?php echo !empty($int['virt'])?'virt-host':''?>" data-toggle="popover" data-id-interface="<?=$id_int?>"
@@ -134,7 +134,7 @@
                                 <?php echo ($device['full']=='1'&& $device['action']=='1'&&$device['id_device']!=='0')  ? '<span class="glyphicon glyphicon-edit td-icon update-ip"></span>' : ''?>
   
                         </td>
-                        <td class="model" data-item="model"><?=$device['model']?> </td>  
+                        <td class="model fill" data-item="model"><?=$device['model']?> </td>  
                         <?php foreach( $rack_port_list as $id_port => $name):?>
                             <?php if(array_key_exists($id_port,$device['ports'])):?>
                                 <td class="link" data-id-port="<?=$id_port?>" 

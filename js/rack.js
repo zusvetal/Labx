@@ -620,7 +620,11 @@ $('.virt-host').on('shown.bs.popover', function (e) {
 
 
 $('#racksCarousel').on('slid.bs.carousel', function () {
-  var  idRack= $(this).find('.active').data('idRack'),
-       idLab=$('#fullRack').data('idLab');
-       setLocation('/lab/'+idLab+'/rack/'+idRack);
+    var idRack = $(this).find('.active').data('idRack'),
+            idLab = $('#fullRack').data('idLab'),
+            curUrl = window.location.href,
+            global, arr;
+    arr = curUrl.split('/');
+    global = arr[arr.length - 5];
+    setLocation('/' + global + '/lab/' + idLab + '/rack/' + idRack);
 });

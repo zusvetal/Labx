@@ -27,7 +27,7 @@
                 data-id-work-status="<?=$device['id_work_status']?>"
                 data-id-device="<?=$device['id_device']?>" data-id-location="<?=$device['id_location']?>">
         <?php if($_SESSION['level']=='0'):?>
-        <td class="hide-td right-border">
+        <td class="hide-td right-border icon">
             <?php if(!empty ($device['modules'])):?>
             <span class="glyphicon glyphicon-chevron-down show-modules" title="show modules"></span>
             <?php else:?>
@@ -94,7 +94,7 @@
     <?php if(!empty ($device['modules'])):?>
     <tr class="modules-list" data-id-device="<?=$device['id_device']?>">
         <td class="hide-td"></td>
-        <td colspan="8" class="hide-td bottom-border" >
+        <td colspan="9" class="hide-td bottom-border" >
             <?php if($_SESSION['level']=='0'):?>
     <center><span class="glyphicon glyphicon-plus add-module" title="add module to device"></span></center><br/>
     <?php endif;?>
@@ -108,7 +108,7 @@
             <td  data-item="sn" title="Serial Number"><?=$module['sn']?> </td> 
             <td  data-item="pn" title="Part Number"><?=$module['pn']?> </td>
             <?php if($_SESSION['level']=='0'):?>
-            <td class="hide-td"><span class="glyphicon glyphicon-remove unbind"></span></td>
+            <td class="hide-td act"><span class="glyphicon glyphicon-remove unbind"></span></td>
             <?php endif;?>
         </tr>
 

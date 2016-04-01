@@ -19,12 +19,11 @@ $("#auth").submit(function () {
             },
             success: function (permission) {
                 if (permission) {
-//                    var location = typeof permission == 'string'  ? permission : '/';
-                    var location = '/';
+                    var location = typeof permission == 'string'  ? permission : '/';
                     document.location.replace(location);
                 }
                 else {
-                    $('#loginInfo').text('The username or password you entered is incorrect.')
+                    $('#loginInfo').text('The username or password you entered is incorrect.');
                 }
             },
             error: function (xhr, ajaxOptions, thrownError) {
