@@ -171,7 +171,7 @@ var getValues = function (table, where_col, where_value) {
         }
     },
             "json"
-            )
+            );
 
 };
 var highLightNewEntry = function (element) {
@@ -411,7 +411,17 @@ var Modal = function () {
         $('#modalDialog').css('width', width);
     };
 };
-var List = function (table, idField, searchField) {
+var List = function (table, idField, searchField,options) {
+    /*
+     * settings.width  from 1 to 12
+     */
+    var settings = {
+        type: 'dropdown',
+        width:'8'
+    };
+    if (options) {
+        $.extend(settings, options);
+    }
     this.table = table;
     this.idField = idField;
     this.searchField = searchField;
@@ -420,18 +430,21 @@ var List = function (table, idField, searchField) {
         var modelName = $parentEl.text(),
                 eventListener = this.eventListener,
                 getLiveSearchList = this.getLiveSearchList;
+                
        return  $.post(
                 "/ajax",
                 {
                     elements_dropdown: '1',
                     table: table,
                     id_col: idField,
-                    search_col: searchField
+                    search_col: searchField,
+                    type:settings.type
 
                 },
         function (data) {
             $parentEl.html(data);
             $parentEl.find('input').val(modelName);
+            $parentEl.find('.width').addClass('col-lg-'+settings.width);
             if (typeof callback !== 'undefined') {
                 callback($parentEl);
             }
@@ -533,7 +546,7 @@ var List = function (table, idField, searchField) {
                     $input.attr('data-id-element', $target.data('idElement'))
                             .focus()
                             .val(value);
-                    $parentEl.trigger('changeElement', [idElement])
+                    $parentEl.trigger('changeElement', [idElement]);
                     $itemField.slideUp();
 
                     break;
@@ -568,6 +581,9 @@ var List = function (table, idField, searchField) {
 
             }
         });
+        $parentEl.on('change.search', 'select', function (event) {
+            $parentEl.trigger('changeElement', [$(this).val()]);
+        });
     };
     this.changeElement = function (callback) {
         this.$parentEl.on('changeElement', callback);
@@ -600,34 +616,53 @@ var List = function (table, idField, searchField) {
         return insertValue(table, searchField, elementName);
     };
     this.getInputVal = function () {
-        if (this.$parentEl.find('input.search-element').val() !== undefined) {
-            return this.$parentEl.find('input.search-element').val().trim();
+        if (settings.type==='dropdown' && this.$parentEl.find('.search-element').val() !== undefined) {
+            return this.$parentEl.find('.search-element').val().trim();
+        }
+        else if(settings.type==='select' && this.$parentEl.find('.search-element :selected').text() !==undefined ){
+            return this.$parentEl.find('.search-element :selected').text();
         }
         return false;
     };
     this.setInputVal = function (value) {
-        return this.$parentEl.find('input.search-element').val(value);
+        if (settings.type === 'dropdown') {
+            return this.$parentEl.find('.search-element').val(value);
+        }
+        else if (settings.type === 'select') {
+           return  this.$parentEl.find(' .search-element option:contains("'+value+'")').attr("selected", "selected");      
+        }     
     };
     this.getElementId = function () {
-        return this.$parentEl.find('input.search-element').attr('data-id-element');
+        if(settings.type==='dropdown'){
+            return this.$parentEl.find('.search-element').attr('data-id-element');
+        }
+        else if(settings.type==='select'){
+            return this.$parentEl.find('.search-element').val();
+        }
+        
     };
     this.setElementId = function (id) {
-        return this.$parentEl.find('input.search-element').attr('data-id-element', id);
+        if (settings.type === 'dropdown') {
+            return this.$parentEl.find('input.search-element').attr('data-id-element', id);
+        }
+        else if (settings.type === 'select') {
+            return this.$parentEl.find('.search-element [value="'+id+'"]').attr('selected', 'selected');
+        }       
     };
     this.focusToInputField = function () {
-        this.$parentEl.find('input.search-element').focus();
+        this.$parentEl.find('.search-element').focus();
     };
     this.addClassToInputField = function (className) {
-        this.$parentEl.find('input.search-element').addClass(className);
+        this.$parentEl.find('.search-element').addClass(className);
     };
     this.removeElementsDropDown = function () {
         if (this.$parentEl) {
             this.destroyEvents();
-            if (this.$parentEl.find('input').length > 0) {
+            if (this.$parentEl.find('.search-element').length > 0) {
                 this.$parentEl.text(this.getInputVal());
             }
         }
-    }
+    };
 
 };
 var GettingInfoFromDevice = function (modelName, ip) {
@@ -747,13 +782,12 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
                                     access = ping;
                                     console.log('ping: ' + ping);
                                     if (!ping) {
-                                        dfd.reject('device not availiable');
-                                        return false;
+                                        dfd.resolve('device not availiable');
+                                        return $.Deferred();
                                     }
                                     return info.general();
                                 })
                                 .then(function (data) {
-                                    console.log(data);
                                     sn = data['S/N'];
                                     $parentEl.html('<div class="section-header">\
                                                         <a class=" collapsed" data-toggle="collapse"  href="#genInfoCollaps" aria-expanded="true" aria-controls="genInfoCollapse">\
@@ -782,11 +816,11 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
                     }
                     else {
 
-                        dfd.reject('can`t get info from device');
+                        dfd.resolve('can`t get info from device');
                     }
                 }
                 else {
-                    dfd.reject('device haven`t network interface');
+                    dfd.resolve('device haven`t network interface');
                     /*
                      * need be
                      * information from db
@@ -954,10 +988,10 @@ var deviceModuleTable = function ($parentEl, idDevice) {
         });
     });
 
-    var dfd = jQuery.Deferred();
-    var infoFromDevice, ip, info;
-    var modelName = getValue('device_model', 'model', 'id_model', getValue('device_list', 'id_model', 'id_device', idDevice));
-    $parentEl.html('\
+    var dfd = jQuery.Deferred(),
+    infoFromDevice, ip, info,
+    modelName = getValue('device_model', 'model', 'id_model', getValue('device_list', 'id_model', 'id_device', idDevice)),
+    section=('\
     <div class="section-header">\
         <a class=" collapsed" data-toggle="collapse"  href="#cardsCollapse" aria-expanded="true" aria-controls="cardsCollapse">\
             Device cards\
@@ -978,39 +1012,38 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                     if (info.abilityGettingInfo && (ip !== '' && ip !== '0.0.0.0')) {
                         ping(ip)
                                 .then(function (ping) {
-                                    // console.log(ping,ip);
                                     if (!ping) {
-                                        dfd.reject('device not availiable');
-                                        return false;
+                                        dfd.resolve('device not availiable');
+                                        return $.Deferred();
                                     }
                                     return info.getModulesInfo();
                                 })
                                 .then(function (info) {
                                     infoFromDevice = info;
-                                    //console.log(info);
                                     if (!infoFromDevice) {
-                                        dfd.reject('device haven\'t inner card');
-                                        return false;
+                                        dfd.resolve('device haven\'t inner card');
+                                        return $.Deferred();
                                     }
                                     return  getMondulesInfoFromDB(idDevice);
                                 })
                                 .then(function (infoFromDB) {
-//                                    console.log(infoFromDB);
+                                    console.log(infoFromDB)
+                                    $parentEl.html(section)
                                     var $newModules = $parentEl.find('.section-content').html(createModulesTable(infoFromDB, infoFromDevice));
                                     if ($newModules.length !== 0) {
                                         checkNewModulesInStock($newModules, idDevice);
                                     }
                                     dfd.resolve($newModules);
-                                    //dfd.always($parentEl.off('.cards', '**'));
+                                    dfd.always($parentEl.off('.cards', '**'));
                                 });
                     }
                     else {
 
-                        dfd.reject('can`t get info from device');
+                        dfd.resolve('can`t get info from device');
                     }
                 }
                 else {
-                    dfd.reject('device haven`t network interface');
+                    dfd.resolve('device haven`t network interface');
                     /*
                      * need be
                      * information from db
@@ -1422,19 +1455,24 @@ var interfaceForm = function () {
             if (idInterface !== 0) {
                 $.confirm("Do you want to remove network interface")
                         .then(function () {
+                           return getValues('interfaces', 'id_interface', idInterface)
+                        })
+                        .then(function (interface) {
+                            if (interface) {
+                                addDeviceEvent(idDevice, 'Remove interface with ip - "' + interface['ip'] + '", host - "' + interface['host'] + '" ');
+                            } 
                             return deleteValue('interfaces', 'id_interface', idInterface)
                         })
                         .then(function () {
                             return $interface.fadeOut();
                         })
                         .then(function () {
-                            $interface.remove()
-
-                        })
+                            $interface.remove();
+                        });
             }
             else {
                 $interface.fadeOut(function () {
-                    $interface.remove()
+                    $interface.remove();
                 });
             }
         });
@@ -1570,8 +1608,15 @@ var interfaceForm = function () {
                             host = $interface.find('.hostname').val().trim(),
                             idType = $interface.find('.type :selected').val(),
                             idInterface = $interface.data('idInterface') !== 0 ? $interface.data('idInterface') : insertValue('interfaces', 'id_device', idDevice);
-                    console.log($interface.data('idInterface'), idInterface, idDevice);
-                    updateValueList('interfaces', {ip: ip, host: host, id_type: idType}, 'id_interface', idInterface)
+                    getValues('interfaces', 'id_interface', idInterface)
+                            .then(function (interface) {
+                                if(interface['ip']===''&&interface['host']===''){
+                                    addDeviceEvent(idDevice, 'Add new interface with ip - "'+ip+'", host - "'+host+'" ');
+                                }else if(interface['ip'] !== ip || interface['host'] !== host){
+                                    addDeviceEvent(idDevice, 'Change interface  ip - "'+interface['ip']+'", host - "'+interface['host']+'"  to "'+ip+'", "'+host+'"');
+                                }
+                                return updateValueList('interfaces', {ip: ip, host: host, id_type: idType}, 'id_interface', idInterface);
+                            })
                             .then(function () {
                                 if ((count - 1) === index) {
                                     $parentEl.empty();
@@ -1604,7 +1649,6 @@ var interfaceForm = function () {
     };
 
 };
-
 var Form = function (type, callback) {
     var param,
             idGlobalLocation = getIdGlobalLocation();
@@ -1625,10 +1669,10 @@ var Form = function (type, callback) {
             idField: 'id_module'
         };
     }
-    var modelList = new List(param.tableModel, 'id_model', 'model');
+    
     var ownerList = new List('staff', 'id_employee', 'employee_name');
     var teamList = new List('team', 'id_team', 'team_name');
-
+    var modelList = new List(param.tableModel, 'id_model', 'model');
     this.getForm = function ($parentEl, options, callback) {
         /*define method argument*/
         if (typeof options === 'function') {
@@ -1639,8 +1683,9 @@ var Form = function (type, callback) {
             options = {};
         }
         /***********************************/
+        
         var dfd = jQuery.Deferred(),
-                /*form can be for add new device or edit old*/
+    /*form can be for add new device or edit old*/
                 action = (options.id !== undefined) ? 'update' : 'insert';
         this.$parentEl = $parentEl;
         this.id = options.id;
@@ -1658,7 +1703,6 @@ var Form = function (type, callback) {
                 getValues(param.tableList, param.idField, options.id)
                         .then(function (values) {
                             if (values) {
-                                console.log(values);
                                 /*Section with dropdown elements*/
                                 ownerList.getElementsDropDown($('#deviceOwner'), function () {
                                     ownerList.setElementId(values.id_owner);
@@ -2379,10 +2423,12 @@ var insertOverBarcodeForm = function (idRack, topSlot, callback) {
 
         $parentEl.on('click.barcode', 'button.submit-barcode', function () {
             var barcode = $parentEl.find('.barcode').val().trim(),
-                    numOfUnit,
-                    idDevice, idLocation, deviceInfo, idModel, idDeviceInRack, modelName, ip;
+                    rackName=getValue('rack','name','id_rack',idRack),
+                    newRackLocation="Rack "+rackName+" slot "+topSlot,
+                    numOfUnit,idDevice, idLocation, oldLocation, deviceInfo, idModel, idDeviceInRack, modelName, ip;
             idDevice = getValue('device_list', 'id_device', 'asset_harmonic', barcode);
             if (idDevice !== '0') {
+                /*device used in other location*/
                 idModel = getValue('device_list', 'id_model', 'id_device', idDevice);
                 idLocation = getValue('device_list', 'id_location', 'id_device', idDevice);
                 numOfUnit = getValue('device_model', 'size_in_unit', 'id_model', idModel);
@@ -2393,6 +2439,7 @@ var insertOverBarcodeForm = function (idRack, topSlot, callback) {
                                 $parentEl.find('.submit-barcode')
                                         .attr('disabled', 'disabled');
                                 if (device) {
+                                    oldLocation=device['descr'];
                                     warnMessage(
                                             $parentEl.find('.info-field'),
                                             '<br>Device is used in other location </b>.<br>\
@@ -2412,7 +2459,7 @@ var insertOverBarcodeForm = function (idRack, topSlot, callback) {
                                 }
                             });
                     $parentEl.on('click.barcode', '#moveSubmit', function () {
-                        var mngIp
+                        var mngIp;
                         if (!checkEmptySpaceInRack(idRack, topSlot, numOfUnit)) {
                             dangerMessage($parentEl.find('.info-field'), 'This device cannot insert in this unit. Not enough place');
                         }
@@ -2420,9 +2467,10 @@ var insertOverBarcodeForm = function (idRack, topSlot, callback) {
                             mngIp = getValue('devices_in_racks', 'mng_ip', 'id_device', idDevice);
                             deleteValue('devices_in_racks', 'id_device', idDevice)
                                     .then(function () {
-                                        idDeviceInRack = insertValueList('devices_in_racks', {mng_ip: mngIp, id_device: idDevice, unit: topSlot, size_in_unit: numOfUnit, id_rack: idRack, id_model: idModel})
+                                        idDeviceInRack = insertValueList('devices_in_racks', {mng_ip: mngIp, id_device: idDevice, unit: topSlot, size_in_unit: numOfUnit, id_rack: idRack, id_model: idModel});
                                         /*"1" - id of rack location*/
                                         updateValue('device_list', 'id_location', '1', 'id_device', idDevice, function () {
+                                            addDeviceEvent(idDevice, 'Move device from "'+oldLocation+'" to "'+newRackLocation+'"');
                                             dfd.resolve(idDeviceInRack);
                                         });
                                     })
@@ -2435,7 +2483,7 @@ var insertOverBarcodeForm = function (idRack, topSlot, callback) {
                                 .removeAttr('disabled');
                     });
                 }
-                /*Add to rack*/
+                /*Device locate in Storage -  Add to rack*/
                 else {
                     if (!checkEmptySpaceInRack(idRack, topSlot, numOfUnit)) {
                         dangerMessage($parentEl.find('.info-field'), 'This device cannot insert in this unit. Not enough place');
@@ -2445,6 +2493,7 @@ var insertOverBarcodeForm = function (idRack, topSlot, callback) {
                         idDeviceInRack = insertValueList('devices_in_racks', {mng_ip: ip, id_device: idDevice, unit: topSlot, size_in_unit: numOfUnit, id_rack: idRack, id_model: idModel})
                         /*"1" - id of rack location*/
                         updateValue('device_list', 'id_location', '1', 'id_device', idDevice, function () {
+                            addDeviceEvent(idDevice, 'Move device from "Storage" to "'+newRackLocation+'"');
                             dfd.resolve(idDeviceInRack);
                         });
                     }
@@ -2549,7 +2598,7 @@ var ModelForm = function (type) {
                                     $parentEl
                                             .find('#imgField')
                                             .attr('data-icon', values.icon_name)
-                                            .html('<button type="button" class="close"><span>&times;</span></button>\
+                                            .html('<button type="button" class="close remove-image"><span>&times;</span></button>\
                                                  <img src="/icon/' + values.icon_name + '"/>');
                                 }
                                 else {
@@ -2663,7 +2712,15 @@ var ModelForm = function (type) {
                         $tr.remove();
                     });
         });
-        $parentEl.on('click.model', '#imgField .close', function () {
+        $parentEl.on('click.model', '.add-pn', function () {
+            $parentEl.find('#pn')
+                    .append('<tr><td></td>\
+                            <td class="pn addition">\
+                             <input data-id-pn="0"  type="text" class="value form-control">\
+                             <span class="glyphicon glyphicon-remove small remove-pn"></span>\
+                            </td></tr>');
+        });
+        $parentEl.on('click.model', '.remove-image', function () {
             $parentEl
                     .find('#imgField')
                     .attr('data-icon', '')
@@ -2672,13 +2729,17 @@ var ModelForm = function (type) {
                                 <input type="file" class="upload-img" accept="image/*" />\
                            </div>');
         });
-        $parentEl.on('click.model', '.add-pn', function () {
-            $parentEl.find('#pn')
-                    .append('<tr><td></td>\
-                            <td class="pn addition">\
-                             <input data-id-pn="0"  type="text" class="value form-control">\
-                             <span class="glyphicon glyphicon-remove small remove-pn"></span>\
-                            </td></tr>');
+        $parentEl.on('click.model', 'input.upload-img', function () {
+            var uploadDir = '/icon/';
+            $(this).fileManage('upload', uploadDir, function ($el, fileName) {
+                $parentEl.find('#imgField')
+                        .attr('data-icon', fileName)
+                        .html('\
+                                    <button type="button" class="close remove-image"><span aria-hidden="true">&times;</span></button>\
+                                    <img src="' + uploadDir + fileName + '"/>\
+                               ');
+            });
+
         });
         $parentEl.on('change.model', 'select.form-factor', function () {
             switch ($(this).val()) {
@@ -2870,8 +2931,8 @@ var VMForm = function (idInterface) {
             var $ipInput = $parentEl.find('[name="virt_ip"]'),
                     comment = $parentEl.find('#comment').summernote('code'),
                     ip = $ipInput.val(),
-                    os = $parentEl.find('[name="virt_host"]').val(),
-                    host = $parentEl.find('[name="os"]').val(),
+                    host = $parentEl.find('[name="virt_host"]').val(),
+                    os = $parentEl.find('[name="os"]').val(),
                     valid = true;
             /*ip field validation*/
             if (ip !== '' && ip !== '0.0.0.0') {
@@ -3155,9 +3216,7 @@ var modelDescription = function ($parentEl, type, modelName, callback) {
             },
     function (html) {
         $parentEl.html(html);
-        console.log($parentEl.find('#modelDescriptionCollapse p'));
-        if ($parentEl.find('#modelDescriptionCollapse p').html() === '') {
-
+        if ($parentEl.find('#modelDescriptionCollapse').html().trim() === '') {
             $parentEl.empty()
         }
         if (typeof callback !== 'undefined') {
@@ -3168,7 +3227,25 @@ var modelDescription = function ($parentEl, type, modelName, callback) {
     return dfd.promise();
 };
 
-
+var addDeviceEvent = function(id,event){
+    return insertValueList('device_history',{event:event,id_device:id});
+};
+var addModuleEvent = function(id,event){
+    return insertValueList('module_history',{event:event,id_module:id});
+};
+var historyEvents = function ($parentEl,type,id,callback) {
+    var dfd = jQuery.Deferred();
+    $.get('/get_history',
+            {type: type, id: id},
+    function (html) {
+        $parentEl.html(html);
+        if (typeof callback !== 'undefined') {
+            callback($parentEl);
+        }
+        dfd.resolve();
+    });
+    return dfd.promise();
+};
 
 /******************************************************************************/
 /************************* Ajax Setup *****************************************/
@@ -3350,4 +3427,37 @@ jQuery.alert = function (dialog, callback) {
     });
     return  deferred.promise();
 };
-console.log(window.location)
+/******************************************************************************/
+/************************* Shake plugin window *****************************/
+/******************************************************************************/
+(function ($) {
+    $.fn.shake = function (options) {
+        // defaults
+        var settings = {
+            shakes: 2,
+            distance: 10,
+            duration: 400
+        };
+        // merge options
+        if (options) {
+            $.extend(settings, options);
+        }
+        console.log(settings)
+        // make it so
+        var pos;
+        return this.each(function () {
+            $this = $(this);
+            // position if necessary
+            pos = $this.css('position');
+            if (!pos || pos === 'static') {
+                $this.css('position', 'relative');
+            }
+            // shake it
+            for (var x = 1; x <= settings.shakes; x++) {
+                $this.animate({ left: settings.distance * -1 }, (settings.duration / settings.shakes) / 4)
+                    .animate({ left: settings.distance }, (settings.duration / settings.shakes) / 2)
+                    .animate({ left: 0 }, (settings.duration / settings.shakes) / 4);
+            }
+        });
+    };
+}(jQuery));

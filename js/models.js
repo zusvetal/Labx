@@ -86,9 +86,11 @@ $('#content ').on('keypress', 'input.update', function (event) {
 
 $('table').on('click', '.remove', function () {
     var $tr = $(this).closest('tr'),
-            idModel = $tr.attr('data-id-model');
+            idModel = $tr.attr('data-id-model'),
+            $img=$tr.find('.img img');
     $.confirm("Do you want to remove this model?")
             .then(function () {
+                $img.fileManage('delete');
                 deleteValue(table, 'id_model', idModel);
                 return $tr.fadeOut('slow')
             })

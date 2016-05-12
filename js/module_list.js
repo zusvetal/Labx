@@ -97,11 +97,13 @@ $('#content').on('click.devices', 'span.edit-module', function (event) {
 /******************************************************************************/
 $('#content').on('click.modules', '.edit-trans', function (event) {
     var $tr = $(this).closest('tr'),
-            id = $tr.data('idTransferStatus'),
+            idOld = $tr.data('idTransferStatus'),
             nameModel = $tr.find('.model').text(),
             idModule=$tr.data('idModule'),
-            modal = new Modal();
+            modal = new Modal(),
+            oldStatus,idNew;
     event.preventDefault();
+    alert(idOld);
     modal.getModal($('#transferStatus'))
             .then(function () {
                 /*Action after closing modal window*/
@@ -112,14 +114,24 @@ $('#content').on('click.modules', '.edit-trans', function (event) {
                 modal.setTitle('Choose transfer status for <b>' + nameModel + '</b>');
                 modal.setWidth('30%');
                 modal.show();
+                return getValueAsync('transfer_status','transfer_status_name','id_transfer_status',idOld);
+            })
+            .then(function (status) {
+                oldStatus=status
                 return getTransferStatus(modal.getBodyField());
             })
             .then(function (id) {
-                hideTransferStatus();
-                $tr.attr('data-id-transfer-status',id);
-                return updateValue('module_list','id_transfer_status',id,'id_module',idModule);
+                alert(id)
+                idNew=id;
+                $tr.attr('data-id-transfer-status', id);
+                return updateValue('module_list', 'id_transfer_status', id, 'id_module', idModule);
             })
-            .then(function () {               
+            .then(function () {
+                hideTransferStatus();
+                return getValueAsync('transfer_status', 'transfer_status_name', 'id_transfer_status', idNew );
+            })
+            .then(function (newStatus) {
+                addModuleEvent(idModule, 'Change transfer status from "' + oldStatus + '" to "' + newStatus+'"');
                 showTransferStatus();
                 modal.hide();
             });
@@ -127,10 +139,11 @@ $('#content').on('click.modules', '.edit-trans', function (event) {
 
 $('#content').on('click.modules', '.edit-work', function (event) {
     var $tr = $(this).closest('tr'),
-            id = $tr.data('idWorkStatus'),
+            idOld = $tr.data('idWorkStatus'),
             nameModel = $tr.find('.model').text(),
             idModule=$tr.data('idModule'),
-            modal = new Modal();
+            modal = new Modal(),
+            oldStatus, idNew;
     event.preventDefault();
     modal.getModal($('#transferStatus'))
             .then(function () {
@@ -142,17 +155,26 @@ $('#content').on('click.modules', '.edit-work', function (event) {
                 modal.setTitle('Choose working status for <b>' + nameModel + '</b>');
                 modal.setWidth('30%');
                 modal.show();
+                return getValueAsync('work_status', 'work_status_name', 'id_work_status', idOld);
+            })
+            .then(function (status) {
+                oldStatus=status;
                 return getWorkStatus(modal.getBodyField());
             })
             .then(function (id) {
-                hideWorkStatus();
-                $tr.attr('data-id-work-status',id);
+                idNew = id;
+                $tr.attr('data-id-work-status', id);
                 return updateValue('module_list', 'id_work_status', id, 'id_module', idModule);
             })
             .then(function () {
-                showWorkStatus();
-                modal.hide();
+                hideWorkStatus();
+                return getValueAsync('work_status', 'work_status_name', 'id_work_status', idNew);
             })
+            .then(function (newStatus) {
+                showWorkStatus();
+                addModuleEvent(idModule, 'Change status from "' + oldStatus + '" to "' + newStatus+'"');
+                modal.hide();
+            });
 });
 
 /******************************************************************************/
@@ -178,12 +200,16 @@ $('#content').on('click.modules', 'span.info-module', function () {
                 modal.addBody('\
                                <div id="moduleDescription"></div>\
                                <div id="modelDescription"></div>\
+                               <div id="historyEvents"></div>\
                               ')
                 $tr.addClass('info');
                 return getMainInfo($('#moduleDescription'), 'module', idModule);
             })
-            .then(function ($body) {
+            .then(function () {
                 return modelDescription($('#modelDescription'), 'module', modelName);
+            })
+            .then(function () {
+                return historyEvents($('#historyEvents'), 'module',idModule);
             })
 });
 /******************************************************************************/
@@ -193,7 +219,8 @@ $('#content').on('click.modules', 'span.transfer', function () {
     var $tr = $(this).closest('tr'),
             idModule = $tr.data('idModule'),
             modelName = $tr.find('td.model').text(),
-            modal = new Modal();
+            modal = new Modal(),
+            oldLocation,idNewLocation;
     modal.getModal($('#transferDevice'))
             .then(function () {
                 modal.setWidth('30%');
@@ -205,24 +232,33 @@ $('#content').on('click.modules', 'span.transfer', function () {
                 });
                 modal.addBody('<div id="head"></div>\
                                 <div id="globalLocations"></div>\
-                            ')
+                            ');
                 infoMessage(modal.getBodyField().find('#head'),
                         '<center><b>Choose location, which will transfer device</b></center>'
-                        )
+                        );
                 return  getGlobalLocations(modal.getBodyField().find('#globalLocations'));
             })
             .then(function (id) {
-                return updateValueList('module_list', {id_global_location:id, id_transfer_status:'0'}, 'id_module', idModule);
+                idNewLocation=id;
+                return updateValueList('module_list', {id_global_location:id, id_transfer_status:'1'}, 'id_module', idModule);
             })
             .then(function () {
-                $tr.fadeOut(function(){
-                   modal.hide();
-                   $tr.remove();
-                   recountNumber($('td.number'));
-                });
+                return getValueAsync('global_location', 'name', 'id_global_location', getIdGlobalLocation());
+            })
+            .then(function (location) {
+                oldLocation=location;
+                return getValueAsync('global_location', 'name', 'id_global_location', idNewLocation);
+            })
+            .then(function (location) {
+                addModuleEvent(idModule, 'Change global location from "' + oldLocation + '" to "' + location + '"');
+                return $tr.fadeOut();
+            })
+            .then(function () {
+                    modal.hide();
+                    $tr.remove();
+                    recountNumber($('td.number'));
             });
 });
-
 /******************************************************************************/
 /*****************************  popover info **********************************/
 /******************************************************************************/

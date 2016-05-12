@@ -39,7 +39,7 @@ $app->add(function ($request, $response, $next) {
                 echo $uri;
                 return $response->withHeader('location', '/'.$global.$uri);
             }
-            echo 'not exist';
+            return $response->withHeader('location', '/');
         }
     }else{
         unset($_SESSION['redirect']);
@@ -78,8 +78,9 @@ $app->get('/login', function ($request, $response, $args) {
 
 $app->post('/login', function ($request, $response, $args) {
     include 'login.php';
-    echo authenticate($_POST['username'], $_POST['password']);
+    echo json_encode(authenticate($_POST['username'], $_POST['password']));
     exit();
+
 });
 
 $app->get('/', function ($request, $response, $args) {

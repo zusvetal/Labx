@@ -67,8 +67,7 @@ var checkMenuOption=function(){
        showWorkStatus(); 
     }
 };
-var checkViewOption = function () {
-    
+var checkViewOption = function () { 
     $('#viewField .list-group-item').each(function () {
         var $el = $(this),
                 item = $el.data('toggle');
@@ -84,7 +83,8 @@ var checkViewOption = function () {
 
 /*** Location ***/
 $('#content').on('click', 'a.key[data-key="id_location"]', function () {
-    var $btn = $(this);
+    var $btn = $(this),
+            location = new List('location', 'id_location', 'name', {type: 'select',width:'12'});
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
         $('#id_location').remove();
@@ -96,15 +96,14 @@ $('#content').on('click', 'a.key[data-key="id_location"]', function () {
                     <div id="id_location" class="search-field">\
                         <button type="button" class="close close-field"><span>&times;</span></button>\
                         <h6>Location</h6>\
-                        <select class="form-control value">\
-                            <option value="4">Storage</option>\
-                            <option value="1">Racks</option>\
-                            <option value="2">Labdesk</option>\
-                            <option value="3">On hand</option>\
-                        </select>\
+                         <div id="select_location"></div>\
                     </div>\
         ');
-        search();
+        location.getElementsDropDown($('#select_location'))
+                .then(function () {
+                    location.addClassToInputField('value')
+                    search();
+                })
     }
 });
 
@@ -155,52 +154,83 @@ $('#content').on('click', 'a.key[data-key="vm"]', function () {
 
 /*** Transfer ***/
 $('#content').on('click', 'a.key[data-key="id_transfer_status"]', function () {
-    var $btn = $(this);
+    var $btn = $(this),
+   status = new List('transfer_status', 'id_transfer_status', 'transfer_status_name', {type: 'select',width:'12'});
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
          $('#id_transfer_status').remove();
         search();
     }
-    else {
+        else {
         $btn.addClass('choose');
         $('#searchField').prepend('\
                     <div id="id_transfer_status" class="search-field">\
                         <button type="button" class="close close-field"><span>&times;</span></button>\
                         <h6>Transfer status</h6>\
-                        <select class="form-control value">\
-                            <option value="0" selected >In proccess</option>\
-                            <option value="1">Planned</option>\
-                            <option value="2">Prepared</option>\
-                            <option value="3">On way</option>\
-                        </select>\
+                         <div id="select_transfer_status"></div>\
                     </div>\
         ');
-        search();
+        status.getElementsDropDown($('#select_transfer_status'))
+                .then(function () {
+                    status.addClassToInputField('value');
+                    status.setElementId('1');
+                    search();
+                })
     }
 });
 
 /*** Operability ***/
 $('#content').on('click', 'a.key[data-key="id_work_status"]', function () {
-    var $btn = $(this);
+    var $btn = $(this),
+   status = new List('work_status', 'id_work_status', 'work_status_name', {type: 'select',width:'12'});
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
          $('#id_work_status').remove();
-        search();   
+        search();
     }
-    else {
+        else {
         $btn.addClass('choose');
         $('#searchField').prepend('\
                     <div id="id_work_status" class="search-field">\
                         <button type="button" class="close close-field"><span>&times;</span></button>\
-                        <h6>Working status</h6>\
-                        <select class="form-control value">\
-                            <option value="1" selected >OK</option>\
-                            <option value="2">Not working</option>\
-                            <option value="3">RMA/on repair</option>\
-                        </select>\
+                        <h6>Work status</h6>\
+                         <div id="select_work_status"></div>\
                     </div>\
         ');
-       search();
+        status.getElementsDropDown($('#select_work_status'))
+                .then(function () {
+                    status.addClassToInputField('value');
+                    status.setElementId('1');
+                    search();
+                });
+    }
+});
+/*** Device type ***/
+$('#content').on('click', 'a.key[data-key="id_device_type"]', function () {
+
+    var $btn = $(this),
+   type = new List('device_type', 'id_device_type', 'name', {type: 'select',width:'12'});
+    if ($btn.hasClass('choose')) {
+        $btn.removeClass('choose');
+         $('#id_device_type').remove();
+        search();
+    }
+    else {
+     
+        $btn.addClass('choose');
+        $('#searchField').prepend('\
+                    <div id="id_device_type" class="search-field">\
+                        <button type="button" class="close close-field"><span>&times;</span></button>\
+                        <h6>Device type</h6>\
+                         <div id="select_type"></div>\
+                    </div>\
+        ');
+        
+        type.getElementsDropDown($('#select_type'))
+                .then(function () {
+                    type.addClassToInputField('value');
+                    search();
+                });
     }
 });
 
@@ -283,16 +313,16 @@ $('#content').on('click', function (e) {
 var showTransferStatus = function () {
     $('#menuField .transfer-status').addClass('active');
     $('table .transfer-status').show();
-    $('[data-id-transfer-status="0"]')
+    $('[data-id-transfer-status="1"]')
             .find('.transfer-status .lable')
             .text('');
-    $('[data-id-transfer-status="1"]').addClass('warning')
+    $('[data-id-transfer-status="2"]').addClass('warning')
             .find('.transfer-status .lable')
             .text('planned');
-    $('[data-id-transfer-status="2"]').addClass('success')
+    $('[data-id-transfer-status="3"]').addClass('success')
             .find('.transfer-status .lable')
             .text('prepared');
-    $('[data-id-transfer-status="3"]').addClass('info')
+    $('[data-id-transfer-status="4"]').addClass('info')
             .find('.transfer-status .lable')
             .text('on way');
 };
@@ -356,6 +386,24 @@ var workingStatus = function ($btn) {
 $('#menuField').on('click', '.work-status', function () {
     var $btn = $(this);
     workingStatus($btn);
+
+});
+/*** Export to EXEL ***/
+$('#menuField').on('click', '.export-to-exel', function () {
+    var $btn = $(this);
+    $('#devicesTable').tableExport({fileName: 'Devices table', type: 'xls', escape: 'false'});
+});
+/*** Export to PDF ***/
+$('#menuField').on('click', '.export-to-pdf', function () {
+    var $btn = $(this);
+    $('#devicesTable').tableExport({fileName: 'Devices table', type: 'pdf', escape: 'false',
+        jspdf: {
+            margins: 
+                    {left: 20, right: 10, top: 20, bottom: 20},
+            autotable: 
+                    {styles: {overflow: 'linebreak'}}
+        }
+    });
 
 });
 /******************************************************************************/

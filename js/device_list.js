@@ -90,7 +90,7 @@ $('#content').on('click.devices', 'span.remove-device', function () {
             });
 });
 /******************************************************************************/
-/***************************** edit  device over icon **********************************/
+/***************************** edit  device **********************************/
 /******************************************************************************/
 
 $('#content').on('click.devices', 'span.edit-device', function (event) {
@@ -323,22 +323,29 @@ $('#content').on('click.devices', 'span.info-device', function () {
                                <div id="modelDescription"></div>\
                                <div id="generalInfo"></div>\
                                <div id="deviceCards"></div>\
-                              ')
+                               <div id="historyEvents"></div>\
+                              ');
                 return getMainInfo($('#deviceDescription'), 'device', idDevice);
             })
-            .then(function ($body) {
-                return modelDescription($('#modelDescription'),'device', modelName);
+            .then(function () {
+                return modelDescription($('#modelDescription'), 'device', modelName);
             })
-            .then(function ($body) {
+            .then(function () {
+                return historyEvents($('#historyEvents'), 'device', idDevice);
+            })
+            .then(function () {
                 return netInterfaceInfo($('#statusInfo'), idDevice);
             })
             .then(function () {
                 return generalDeviceInfoTable($('#generalInfo'), idDevice);
             })
-            .then(function ($body) {
+            .then(function () {
                 return deviceModuleTable($('#deviceCards'), idDevice);
+            })
+            .then(function (data) {
+                console.log(data);
             });
-   // $('#content').off('click.devices', 'span.info');
+    // $('#content').off('click.devices', 'span.info');
 });
 /******************************************************************************/
 /**************************** transfer device  ********************************/
@@ -347,7 +354,8 @@ $('#content').on('click.devices', 'span.transfer', function () {
     var $tr = $(this).closest('tr'),
             idDevice = $tr.data('idDevice'),
             modelName = $tr.find('td.model').text(),
-            modal = new Modal();
+            modal = new Modal(),
+            oldLocation,idNewLocation;
     modal.getModal($('#transferDevice'))
             .then(function () {
                 modal.setWidth('30%');
@@ -359,21 +367,31 @@ $('#content').on('click.devices', 'span.transfer', function () {
                 });
                 modal.addBody('<div id="head"></div>\
                                 <div id="globalLocations"></div>\
-                            ')
+                            ');
                 infoMessage(modal.getBodyField().find('#head'),
                         '<center><b>Choose location, which will transfer device</b></center>'
-                        )
+                        );
                 return  getGlobalLocations(modal.getBodyField().find('#globalLocations'));
             })
             .then(function (id) {
-                return updateValue('device_list', 'id_global_location', id, 'id_device', idDevice);
+                idNewLocation=id;
+                return updateValueList('device_list', {id_global_location:id, id_transfer_status:'1'}, 'id_device', idDevice);
             })
             .then(function () {
-                $tr.fadeOut(function(){
-                   modal.hide();
-                   $tr.remove();
-                   recountNumber($('td.number'));
-                });
+                return getValueAsync('global_location', 'name', 'id_global_location', getIdGlobalLocation());
+            })
+            .then(function (location) {
+                oldLocation=location;
+                return getValueAsync('global_location', 'name', 'id_global_location', idNewLocation);
+            })
+            .then(function (location) {
+                addDeviceEvent(idDevice, 'Change global location from"' + oldLocation + '" to "' + location + '"');
+                return $tr.fadeOut();
+            })
+            .then(function () {
+                    modal.hide();
+                    $tr.remove();
+                    recountNumber($('td.number'));
             });
 });
 
@@ -404,10 +422,11 @@ $('.virt-host').on('shown.bs.popover', function (e) {
 /******************************************************************************/
 $('#content').on('click.devices', '.edit-trans', function (event) {
     var $tr = $(this).closest('tr'),
-            id = $tr.data('idTransferStatus'),
+            idOld = $tr.data('idTransferStatus'),
             nameModel = $tr.find('.model').text(),
             idDevice=$tr.data('idDevice'),
-            modal = new Modal();
+            modal = new Modal(),
+            oldStatus,idNew;
     event.preventDefault();
     modal.getModal($('#transferStatus'))
             .then(function () {
@@ -419,14 +438,23 @@ $('#content').on('click.devices', '.edit-trans', function (event) {
                 modal.setTitle('Choose transfer status for <b>' + nameModel + '</b>');
                 modal.setWidth('30%');
                 modal.show();
+                return getValueAsync('transfer_status','transfer_status_name','id_transfer_status',idOld);
+            })
+            .then(function (status) {
+                oldStatus=status
                 return getTransferStatus(modal.getBodyField());
             })
             .then(function (id) {
-                hideTransferStatus();
-                $tr.attr('data-id-transfer-status',id);
-                return updateValue('device_list','id_transfer_status',id,'id_device',idDevice);
+                idNew=id;
+                $tr.attr('data-id-transfer-status', id);
+                return updateValue('device_list', 'id_transfer_status', id, 'id_device', idDevice);
             })
-            .then(function () {               
+            .then(function () {
+                hideTransferStatus();
+                return getValueAsync('transfer_status', 'transfer_status_name', 'id_transfer_status', idNew );
+            })
+            .then(function (newStatus) {
+                addDeviceEvent(idDevice, 'Change transfer status from  "' + oldStatus + '" to "' + newStatus+'"');
                 showTransferStatus();
                 modal.hide();
             });
@@ -434,10 +462,11 @@ $('#content').on('click.devices', '.edit-trans', function (event) {
 
 $('#content').on('click.devices', '.edit-work', function (event) {
     var $tr = $(this).closest('tr'),
-            id = $tr.data('idWorkStatus'),
+            idOld = $tr.data('idWorkStatus'),
             nameModel = $tr.find('.model').text(),
-            idDevice=$tr.data('idDevice'),
-            modal = new Modal();
+            idDevice = $tr.data('idDevice'),
+            modal = new Modal(),
+            oldStatus, idNew;
     event.preventDefault();
     modal.getModal($('#transferStatus'))
             .then(function () {
@@ -449,15 +478,24 @@ $('#content').on('click.devices', '.edit-work', function (event) {
                 modal.setTitle('Choose working status for <b>' + nameModel + '</b>');
                 modal.setWidth('30%');
                 modal.show();
+                return getValueAsync('work_status', 'work_status_name', 'id_work_status', idOld);
+            })
+            .then(function (status) {
+                oldStatus=status;
                 return getWorkStatus(modal.getBodyField());
             })
             .then(function (id) {
-                hideWorkStatus();
-                $tr.attr('data-id-work-status',id);
+                idNew = id;
+                $tr.attr('data-id-work-status', id);
                 return updateValue('device_list', 'id_work_status', id, 'id_device', idDevice);
             })
             .then(function () {
+                hideWorkStatus();
+                return getValueAsync('work_status', 'work_status_name', 'id_work_status', idNew);
+            })
+            .then(function (newStatus) {
                 showWorkStatus();
+                addDeviceEvent(idDevice, 'Change status from "' + oldStatus + '" to "' + newStatus+'"');
                 modal.hide();
             })
 });

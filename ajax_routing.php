@@ -57,4 +57,13 @@ $app->get('/get_search_modules', function ($request, $response, $args) {
         $module_list = empty($keys)? get_search_module():get_search_module($keys);   
     include 'html/sections/module_list.html';
 });
+
+$app->get('/get_history', function ($request, $response, $args) {
+    $id = $request->getQueryParams()['id'];
+    $type=$request->getQueryParams()['type'];
+    $create_at=  get_value($type.'_list', 'created_at', 'id_'.$type, $id);
+    $events= ($type=='device')? get_device_history($id):get_module_history($id);
+    include 'html/sections/event_history.html';
+});
+
 ?>

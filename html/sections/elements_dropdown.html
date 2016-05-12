@@ -1,5 +1,6 @@
+<?php if($type==='dropdown'):?>
 <div id="dropDown" class="row">
-    <div class="col-lg-8">
+    <div class="width">
         <div class="input-group">
             <input  id="searchInput" type="text" class="form-control search-element" data-id-element="0">
             <div class="input-group-btn">
@@ -16,4 +17,17 @@
         </div><!-- /input-group -->
     </div><!-- /.col-lg-8 -->
 </div><!-- /.row -->
-<!--script src="/js/models_dropdown.js"></script-->
+<?php elseif($type==='select') :?>
+    <div id="dropDown" class="row">
+        <div class="width">
+            <select class="form-control search-element">
+                <option value="0">-------------</option>
+                <?php foreach( $elements as $id_element => $name):?>
+                <option value="<?=$id_element?>"><?=$name?></option>
+                <?php endforeach; ?>
+            </select>
+        </div><!-- /.col-lg-8 -->
+    </div><!-- /.row -->
+<?php else:?>
+    <b>Element "<?=$type?>" not exist</b>
+<?php endif;?>

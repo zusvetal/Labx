@@ -120,7 +120,7 @@ $('#content ').on('keypress', 'input.input-link', function (event) {
             idModule = $(link).data("idModule"),
             idDeviceInRack = $(link).closest('tr.unit').data('idDeviceInRack');
     if (key === 13) {   /*press Enter*/
-        updateLink(linkName, idPort, idModule, idDeviceInRack)
+        updateLink(linkName, idPort, idModule, idDeviceInRack);
         $(link).text(linkName);
 
     }
@@ -196,12 +196,12 @@ $('#content').on('click', 'span.add-device', function () {
                         case 'insertOverBarcode':
                             barcode.getForm(modal.getBodyField())
                                     .then(function () {
-                                        return barcode.eventListener()
+                                        return barcode.eventListener();
                                     })
                                     .then(function () {
                                         modal.hide();
                                     })
-                            break
+                            break;
                     }
                     $('#content').off('click', '#elementNavigation button');
                 });
@@ -213,9 +213,12 @@ $('#content').on('click', 'span.add-device', function () {
 /******************* Remove device from unit **********************************/
 /******************************************************************************/
 
-var moveToStorage = function (idDevice) {
+var moveToStorage = function (idDevice,idRack,slot) {
+    var rackName=getValue('rack','name','id_rack',idRack),
+            rackLocation="Rack "+rackName+" slot "+slot;
+    addDeviceEvent(idDevice, 'Move device from "'+rackLocation+'" to "Storage"');
     return updateValue('device_list', 'id_location', '4', 'id_device', idDevice);
-}
+};
 
 $('#content').on('click', '.del-device', function () {
     var $unit = $(this).closest('.unit'),
@@ -233,7 +236,7 @@ $('#content').on('click', '.del-device', function () {
                         return deleteValue('devices_in_racks', 'id_device_in_rack', idDeviceInRack);
                     })
                     .then(function () {
-                        return moveToStorage(idDevice);
+                        return moveToStorage(idDevice,idRack,topSlot);
                     })
                     .then(function () {
                         getRack($rackBody, idRack);
@@ -268,7 +271,7 @@ $('#content').on('click', '.del-device', function () {
                         return deleteValue('devices_in_racks', 'id_device_in_rack', idDeviceInRack);
                     })
                     .then(function () {
-                        return moveToStorage(idDevice);
+                        return moveToStorage(idDevice,idRack,topSlot);
                     })
                     .then(function () {
                         getRack($rackBody, idRack);
@@ -290,6 +293,9 @@ $('#alert').on('closed.bs.alert', function () {
 /******************************************************************************/
 var getAddingForm = function (modal,idDeviceInRack, ip, options) {
     var form = new Form('device'),
+            slot=getValue('devices_in_racks','unit','id_device_in_rack',idDeviceInRack),
+            rackName=getValue('rack','name','id_rack',getValue('devices_in_racks','unit','id_device_in_rack',idDeviceInRack)),
+            rackLocation="Rack "+rackName+" slot "+slot,
             idDevice;
     form.getForm($('#newDevice'), options)
             .then(function () {
@@ -303,6 +309,7 @@ var getAddingForm = function (modal,idDeviceInRack, ip, options) {
                 return updateValue('devices_in_racks', 'id_device', idDevice, 'id_device_in_rack', idDeviceInRack);
             })
             .then(function () {
+                addDeviceEvent(idDevice, 'Move device to "'+rackLocation+'"');
                 return updateValue('device_list', 'id_location', '1', 'id_device', idDevice);
             })
             .then(function () {
@@ -348,11 +355,14 @@ var getInfoFromDevice = function (idDeviceInRack,ip, modelName, info, modal, fre
 }
 $('#content').on('click', 'span.warning', function (event) {
     var $device = $(this).closest('.device'),
-            modelName = $device.find('[data-item="model"]').text().trim(),
+            modelName = $device.find('[data-item="model"]').text().trim(), 
             ip = $device.find('[data-item="mng_ip"]').text().trim(),
             idDeviceInRack = $(this).attr('data-id-device-in-rack'),
             $rackBody = $(this).closest('.rack-body'),
             idRack = $rackBody.find('#rackTable').data('idRack'),
+            topSlot = $device.attr('data-slot'),
+            rackName=getValue('rack','name','id_rack',idRack),
+            rackLocation="Rack "+rackName+" slot "+topSlot,
             idDevice, idInterface,
             info = new GettingInfoFromDevice(modelName, ip),
             modal = new Modal(),
@@ -389,7 +399,8 @@ $('#content').on('click', 'span.warning', function (event) {
                 return freeList.eventListener();
             })
             .then(function (id) {
-                idDevice = id
+                idDevice = id;
+                addDeviceEvent(idDevice, 'Move device from "Storage" to "'+rackLocation+'"');
 //                idInterface = insertValueList('interfaces', {ip: ip, id_device: idDevice});
                 return  updateValue('devices_in_racks', 'id_device', idDevice, 'id_device_in_rack', idDeviceInRack);
             })
@@ -516,22 +527,28 @@ $('#content').on('click', 'span.info', function () {
                                <div id="modelDescription"></div>\
                                <div id="generalInfo"></div>\
                                <div id="deviceCards"></div>\
+                               <div id="historyEvents"></div>\
                               ')
                 return getMainInfo($('#deviceDescription'), 'device', idDevice);
             })
-            .then(function ($body) {
-                return modelDescription($('#modelDescription'),'device', modelName);
+            .then(function () {
+                return modelDescription($('#modelDescription'), 'device', modelName);
             })
-            .then(function ($body) {
+            .then(function () {
                 return netInterfaceInfo($('#statusInfo'), idDevice);
+            })
+            .then(function () {
+                return historyEvents($('#historyEvents'), 'device', idDevice);
             })
             .then(function () {
                 return generalDeviceInfoTable($('#generalInfo'), idDevice);
             })
-            .then(function ($body) {
+            .then(function () {
                 return deviceModuleTable($('#deviceCards'), idDevice);
+            })
+            .then(function (data) {
+                console.log(data);
             });
-
 });
 
 /******************************************************************************/

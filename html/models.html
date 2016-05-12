@@ -23,11 +23,15 @@
         <table id="modelTable" class="table table-hover table-bordered" >
             <tr class="item">
                 <th></th>
+                <th></th>
                 <th>Model</th>
                 <th>Port set</th>
             </tr>
+            <?php $num=0;?>
             <?php foreach( $models as $id_model => $model):?> 
+            <?php ++$num;?>
             <tr class="item" data-id-model="<?=$id_model?>">
+                <td width="30" ><?=$num?></td>
                 <td width="160">
                     <?php if(!empty($model['icon_name'])):?>
                     <div class="img">

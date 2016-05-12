@@ -14,6 +14,7 @@
         <th class="harmonic-barcode">Harmonic barcode</th>
         <th class="gl-barcode">GL barcode</th>
         <th class="sn">S/N</th>
+        <th class="pn">P/N</th>
         <th class="owner">Owner</th>
         <th class="team">Team</th>
         <th class="working-status">Work status</th>
@@ -53,6 +54,7 @@
         <td class="value device harmonic-barcode" data-item="asset_harmonic"><?=$device['asset_harmonic']?> </td>  
         <td class="value device gl-barcode" data-item="asset_gl"><?=$device['asset_gl']?> </td>
         <td class="value device sn" data-item="sn"><?=$device['sn']?> </td>
+        <td class="value device pn" data-item="pn"></td>
         <td class="value device owner" data-item="owner"><?=$device['employee_name']?> </td>
         <td class="value device team" data-item="team"><?=$device['team_name']?> </td>
         <td class="working-status edit">
@@ -92,31 +94,34 @@
         <?php endif;?>
     </tr>
     <?php if(!empty ($device['modules'])):?>
-    <tr class="modules-list" data-id-device="<?=$device['id_device']?>">
-        <td class="hide-td"></td>
+    <tbody class="modules">
+<!--    <tr class="modules-list" data-id-device="<?=$device['id_device']?>">-->
+<!--        <td class="hide-td"></td>
         <td colspan="9" class="hide-td bottom-border" >
             <?php if($_SESSION['level']=='0'):?>
     <center><span class="glyphicon glyphicon-plus add-module" title="add module to device"></span></center><br/>
     <?php endif;?>
-    <table class="table table-hover table-bordered table-module" >
+    <table class="table table-hover table-bordered table-module" >-->
         <?php foreach( $device['modules'] as  $id_module => $module):?> 
-        <tr  class="module" data-id-module="<?=$module['id_module']?>">
-            <td></td>
-            <td>•</td>
+        <tr  class="module" data-id-module="<?=$module['id_module']?>">          
+            <td class="hide-td right-border" colspan="4" align="right">•</td>
             <td  data-item="model"><?=$module['model']?> </td>
-            <td  data-item="asset_harmonic" title="Harmonic asset"><?=$module['asset_harmonic']?> </td>  
+            <td  data-item="asset_harmonic" title="Harmonic asset"><?=$module['asset_harmonic']?> </td>
+            <td  data-item="asset_gl" title="GL asset"><?=$module['asset_gl']?> </td>  
             <td  data-item="sn" title="Serial Number"><?=$module['sn']?> </td> 
             <td  data-item="pn" title="Part Number"><?=$module['pn']?> </td>
+            <td  data-item="owner"> </td>
+            <td  data-item="team"> </td>
             <?php if($_SESSION['level']=='0'):?>
-            <td class="hide-td act"><span class="glyphicon glyphicon-remove unbind"></span></td>
+<!--            <td class="hide-td act"><span class="glyphicon glyphicon-remove unbind"></span></td>-->
             <?php endif;?>
         </tr>
-
         <?php endforeach; ?>
-    </table>
+<!--    </table>
 </td>
-<td class="hide-td"></td>
-</tr>
+<td class="hide-td"></td>-->
+<!--</tr>-->
+ </tbody>
 <?php endif;?>
 <?php endforeach; ?>
 <?php else:?>

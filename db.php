@@ -114,11 +114,17 @@ function get_value_full_list($table, $where_col, $where_value) {
     return !empty($value) ? $value : false;
 }
 function get_elements_list($table, $id_col, $name_col) {
-    $result = mysqli_query(db::$link, "SELECT $id_col,$name_col FROM $table")
+    $query="SELECT $id_col,$name_col FROM $table";  
+    $id_global_field=mysqli_query(db::$link,"SELECT id_global_location FROM $table ");
+    if($id_global_field){
+        $query.=" WHERE id_global_location=".$_SESSION['id_global_location'];       
+    }
+    $result= mysqli_query(db::$link,$query) 
             or die("Invalid query: " . mysqli_error(db::$link));
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
         $elements[$row[$id_col]] = $row[$name_col];
     }
+    
     return $elements;
 }
 function get_interface_list($id_device, $id_type = false) {
@@ -527,6 +533,36 @@ function get_port_set_list() {
     }
     return $port_set_list;
 }
+function get_device_history($id_device) {
+    $query = "SELECT
+            *
+	FROM 
+            device_history
+        WHERE
+            id_device=$id_device
+	";
+    $result = mysqli_query(db::$link, $query)
+            or die("Invalid query: " . mysqli_error(db::$link));
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $history[$row['id']] = $row;
+    }
+    return !empty($history) ? $history : false;
+}  
+function get_module_history($id_module) {
+    $query = "SELECT
+            *
+	FROM 
+            module_history
+        WHERE
+            id_module=$id_module
+	";
+    $result = mysqli_query(db::$link, $query)
+            or die("Invalid query: " . mysqli_error(db::$link));
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $history[$row['id']] = $row;
+    }
+    return !empty($history) ? $history : false;
+}  
 function port_list() {
     $query = "SELECT
             id_port,
@@ -869,16 +905,24 @@ function search_model($value, $table) {
     return false;
 }
 function search_list($table, $id_col, $search_col, $value) {
-    $result = mysqli_query(db::$link, "SELECT $id_col, $search_col FROM $table WHERE $search_col LIKE '%$value%' ")
+    $query = "SELECT $id_col, $search_col FROM $table WHERE $search_col LIKE '%$value%' ";
+    $id_global_field = mysqli_query(db::$link, "SELECT id_global_location FROM $table ");
+    if ($id_global_field) {
+        $query.=" AND id_global_location=" . $_SESSION['id_global_location'];
+    }
+    $result = mysqli_query(db::$link, $query)
             or die("Invalid query: " . mysqli_error(db::$link));
     if ($result->num_rows != 0) {
         while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
             $list[$row[$id_col]] = $row[$search_col];
         }
+        
         return $list;
     }
+    
     return false;
 }
+
 function get_port_list($id_port_set) {
     $result = mysqli_query(db::$link, "SELECT port_list.*
                FROM 
@@ -1027,7 +1071,8 @@ function get_search_module($keys=false) {
             team_name,
             work_status.work_status_name,
             module_list.id_work_status,
-            id_transfer_status
+            id_transfer_status,
+            id_device_type
 	FROM 
             module_list
 	NATURAL JOIN
@@ -1054,9 +1099,21 @@ function get_search_module($keys=false) {
         $query .= " AND id_transfer_status !=0 ";
         unset($keys['id_transfer_status']);
     }
+    if (isset($keys['id_work_status'])&&$keys['id_work_status']==='0') {
+        $query .= " AND id_work_status !=0 ";
+        unset($keys['id_work_status']);
+    }
+    if (isset($keys['id_device_type'])&&$keys['id_device_type']==='0') {
+        $query .= " AND id_device_type !=0 ";
+        unset($keys['id_work_status']);
+    }
+    if (isset($keys['id_device_type'])){
+        $query .= " AND id_device_type= ".$keys['id_device_type']." ";
+        unset($keys['id_device_type']);
+    }
     if ($keys) {
         foreach ($keys as $key => $value) {
-            $query.="AND `$key` LIKE '%$value%'";
+            $query.=" AND `$key` LIKE '%$value%'";
         }
     }
     $query.=" ORDER BY id_module DESC";

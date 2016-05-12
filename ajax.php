@@ -39,8 +39,9 @@ if (isset($_POST['insert_value_list'])) {
     echo insert_value_list($_POST['table'], $_POST['values']);
 }
 if (isset($_POST['elements_dropdown'])) {
+    $type=$_POST['type'];
     $elements = get_elements_list($_POST['table'], $_POST['id_col'], $_POST['search_col']);
-    include 'html/elements_dropdown.html';
+    include 'html/sections/elements_dropdown.html';
 }
 if (isset($_POST['get_modal_window'])) {
     include 'html/modal_window.html';
@@ -286,7 +287,7 @@ if (isset($_POST['device_json_info'])) {
     if ($device['id_location'] === '1') {
         $slot = get_value('devices_in_racks', 'unit', 'id_device', $id_device);
         $rack_name = get_value('rack', 'name', 'id_rack', get_value('devices_in_racks', 'id_rack', 'id_device', $id_device));
-        $device['descr'] = "rack - $rack_name, slot - $slot";
+        $device['descr'] = "Rack  $rack_name slot  $slot";
     } elseif ($device['id_location'] === '2') {
         $labdesk_name = get_value('labdesks', 'name', 'id_labdesk', get_value('devices_in_labdesks', 'id_labdesk', 'id_device', $id_device));
         $device['descr'] = $labdesk_name;

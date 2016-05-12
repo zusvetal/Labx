@@ -1,0 +1,26 @@
+<div class="section-header ">
+    <a class=" collapsed" data-toggle="collapse"  href="#historyCollapse" aria-expanded="false" aria-controls="historyCollapse">
+        History
+    </a>
+  <span class="glyphicon glyphicon-chevron-down arrow"></span>
+</div>
+<div id="historyCollapse" class="section-content well collapse">
+    <table class="table table-condensed">
+        <tr>
+            <th>Date</th>
+            <th>Event</th>
+        </tr>
+        <tr>
+            <td><b><?=$create_at?></b></td>
+            <td><b>Add to database</b></td>
+        </tr>
+        <?php if(!empty($events)):?>
+        <?php foreach( $events as $id => $event):?> 
+        <tr data-id="<?=$id?>">
+            <td><b><small><?=$event['date']?><small></b></td>
+            <td><b><small><?=$event['event']?></small></b></td>
+        </tr>
+        <?php endforeach; ?>
+        <?php endif; ?>
+    </table>
+</div>
