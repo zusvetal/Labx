@@ -590,7 +590,7 @@ td.link{
     width:30%;
     border: solid 2px #ccc;
     float:left;
-    margin-left: 20px;
+    margin-left: 3%;
     text-align: center;
 
 }
@@ -980,6 +980,16 @@ td.icon{
 #devicesTable tr.modules-list{
     display: none;
 }
+#devicesTable tbody.modules{
+    font-size: 12px;
+    font-weight: 600;
+  
+}
+#devicesTable tbody{
+    border-top: none;
+    border-bottom: none;
+}
+
 .table-locations tr{
     text-align: center;
     cursor:pointer;
