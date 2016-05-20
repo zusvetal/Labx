@@ -1,6 +1,6 @@
 <?php
 /*
- * Get information from PVR 7K (rev more at least 4.x) or 8K
+ * Get information from PVR 7K (rev more at least 4.x)
  */
 include_once 'function.php';
 $ip = $_GET['ip'];
@@ -38,11 +38,12 @@ function get_modules_xml_info($ip, $request_xml) {
 
             if (preg_match('/Arave FE 1 Port/i', $module['name'])) {
                 $module['name'] = 'Arava 1 Channels';
-            } elseif (preg_match('/Arave FE 4 Port/i', $module['name'])) {
+            } 
+            elseif (preg_match('/Arave FE 4 Port/i', $module['name'])) {
                 $module['name'] = 'Arava 4 Channels';
             } 
             elseif (preg_match('/Mainboard/i', $module['name'])) {
-                $module['name'] = 'Mainboard';
+                $module['name'] = 'Mainboard PVR 7k';
             } 
             elseif (preg_match('/XCoder Rev/i', $module['name'])) {
                 $module['name'] = 'XCoder';
@@ -57,7 +58,3 @@ if (isset($_GET['get_modules_info'])) {
     echo json_encode(get_modules_xml_info($ip,$request_inventory));
 }
 ?>
-
-
-
-

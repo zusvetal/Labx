@@ -11,6 +11,7 @@
         <div id="viewField">
             <div class="list-group">
                 <a href="#" class="list-group-item active" data-toggle="model">Model</a>
+                <a href="#" class="list-group-item active" data-toggle="type">Type</a>
                 <a href="#" class="list-group-item active" data-toggle="harmonic-barcode">Harmonic barcode</a>
                 <a href="#" class="list-group-item active" data-toggle="gl-barcode">GL barcode</a>
                 <a href="#" class="list-group-item active" data-toggle="pn">P/N</a>
@@ -33,6 +34,24 @@
                     <p class="caption">working status</p>
                 </a>
             </div>
+            <div class="menu-action">
+                <a   class="btn export-to-excel">
+                    <span class="glyphicon glyphicon-export"></span><br/>
+                    <p class="caption">export to excel</p>
+                </a>
+            </div>
+            <div class="menu-action">
+                <a   class="btn export-to-pdf">
+                    <span class="glyphicon glyphicon-export"></span><br/>
+                    <p class="caption">export to PDF</p>
+                </a>
+            </div>
+            <div class="menu-action">
+                <a   class="btn export-to-png">
+                    <span class="glyphicon glyphicon-export"></span><br/>
+                    <p class="caption">export to PNG</p>
+                </a>
+            </div>
         </div>
     </div>
     <div id="category">
@@ -45,15 +64,14 @@
         </div>
         <div id="keyList">
             <p id="keyLabel">Choose key for searching<p>
-                <a  class="btn a-btn key" data-key="sn">Serial Number</a>
-                <a  class="btn a-btn key" data-key="pn">Part Number</a>
-                <a  class="btn a-btn key" data-key="model">Model</a>
-                <a  class="btn a-btn key single" data-key="id_device_type">Type</a>
-                <a  class="btn a-btn key" data-key="asset_harmonic">Barcode</a>
-                <a  class="btn a-btn key single" data-key="status">Status</a>
-                <a  class="btn a-btn key" data-key="employee_name">Owner</a>
+                <button  class="btn a-btn key" data-key="sn">Serial Number</button >
+                <button   class="btn a-btn key" data-key="pn">Part Number</button >
+                <button   class="btn a-btn key" data-key="model">Model</button >
+                <button   class="btn a-btn key single" data-key="id_device_type">Type</button >
+                <button   class="btn a-btn key" data-key="asset_harmonic">Barcode</button >
+                <button   class="btn a-btn key single" data-key="status">Status</button >
+                <button   class="btn a-btn key" data-key="employee_name">Owner</button >
         </div>
-        <div></div>
     </div>
     <!-- Modal -->
     <div id="addNewModuleToStock"></div>
@@ -80,14 +98,15 @@
     <div id="workStatus"></div>
     <!--/Modal-->
     <div id="infoField" class="item-table"> 
-        <h3>Available modules </h3>
+        <h3>Available cards </h3>
         <?php if($_SESSION['level']=='0'):?>
         <span class="add glyphicon glyphicon-plus"></span>
         <?php endif;?>
         <table id="modulesTable" class="table table-hover table-bordered" >
             <tr>
                 <th></th>
-                <th class="model">Module model</th>
+                <th class="model">Model</th>
+                <th class="type">Type</th>
                 <th class="sn">S/N</th>
                 <th class="pn">P/N</th>
                 <th class="harmonic-barcode">Harmonic asset</th>
@@ -103,9 +122,10 @@
             <?php ++$num;?>
             <tr  class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-module="<?=$id_module?>"
                  data-id-transfer-status="<?=$module['id_transfer_status']?>"
-                 data-id-work-status="<?=$module['id_work_status']?>">
+                 data-id-work-status="<?=$module['id_work_status']?>">        
                 <td class="number"><?=$num?></td>
                 <td class="value model" data-item="model"><?=$module['model']?> </td>
+                <td class="value type" data-item="type"><?=$module['type']?> </td>
                 <td class="value sn" data-item="sn"><?=$module['sn']?> </td>
                 <td class="value pn" data-item="pn"><?=$module['pn']?> </td>
                 <td class="value harmonic-barcode" data-item="asset_harmonic"><?=$module['asset_harmonic']?> </td>  
@@ -120,7 +140,7 @@
                     <span class="lable"></span>
                     <span class="glyphicon glyphicon-edit td-icon edit-trans"></span>
                 </td>
-                <td class="status hide-td free-status">
+                <td class="status hide-td  free-status">
                     <?php if(!empty($module['id_device'])):?>
                     <span class="glyphicon used" data-toggle="popover" data-id-device="<?=$module['id_device']?>">used</span>
                     <?php else:?>
@@ -128,13 +148,13 @@
                     <?php endif;?>
                 </td>
                 <td class="hide-td icon"><span class="glyphicon glyphicon-info-sign info info-module"></span></td>
-                <?php if($_SESSION['level']=='0'):?>
-                <td class="icon hide-td"><span class="glyphicon glyphicon-edit edit-module" title="edit device"></span></td>
-                <?php if($module['id_device']==='0'):?>
-                <td class="icon hide-td"><span class="glyphicon glyphicon-transfer transfer" title="transfer to another location"></span></td>
+               <?php if($_SESSION['level']=='0'):?>
+                    <td class="icon hide-td"><span class="glyphicon glyphicon-edit edit-module" title="edit device"></span></td>
+                        <?php if($module['id_device']==='0'):?>
+                            <td class="icon hide-td"><span class="glyphicon glyphicon-transfer transfer" title="transfer to another location"></span></td>
+                        <?php endif;?>
+                    <td class="icon hide-td"><span class="glyphicon glyphicon-remove remove-module" title="remove device from database"></span></td>      
                 <?php endif;?>
-                <td class="icon hide-td"><span class="glyphicon glyphicon-remove remove-module" title="remove device from database"></span></td>      
-           <?php endif;?>
             </tr>
             <?php endforeach; ?>
             <?php else:?>

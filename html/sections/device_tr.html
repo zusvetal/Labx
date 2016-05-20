@@ -1,21 +1,44 @@
-<tr class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-device="<?=$device['id_device']?>" data-id-location="<?=$device['id_location']?>">
+<tr class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-transfer-status="<?=$device['id_transfer_status']?>"
+    data-id-work-status="<?=$device['id_work_status']?>"
+    data-id-device="<?=$device['id_device']?>" data-id-location="<?=$device['id_location']?>">
     <?php if($_SESSION['level']=='0'):?>
-    <td class="hide-td right-border">
+    <td class="hide-td  icon">
         <?php if(!empty ($device['modules'])):?>
         <span class="glyphicon glyphicon-chevron-down show-modules" title="show modules"></span>
         <?php endif;?>
     </td>               
     <?php endif;?>
-    <td class="number"></td>
-    <td class="ip" data-item="host"></td>
-    <td class="ip" data-item="ip"></td>
+    <td class="number"><?=$num?></td>
+    <td class="ip edit" data-item="ip">
+        <?php if( !empty($device['interfaces'])):?>
+        <?php foreach( $device['interfaces'] as $id_int => $int):?>
+        <span class="ip-interface <?php echo !empty($int['virt'])?'virt-host':''?>" data-toggle="popover" data-id-interface="<?=$id_int?>">
+            <?=$int['ip']?>
+        </span>
+        <?php endforeach; ?>
+        <?php endif;?>
+        <?php if($_SESSION['level']=='0'):?>
+        <span class="glyphicon glyphicon-edit td-icon update-ip"></span>
+        <?php endif;?>                         
+    </td>       
+    <td class="host" data-item="host"><?=$device['host']?></td>            
     <td class="value device model" data-item="model"><?=$device['model']?> </td>
-    <td class="value device" data-item="asset_harmonic"><?=$device['asset_harmonic']?> </td>  
-    <td class="value device" data-item="asset_gl"><?=$device['asset_gl']?> </td>
-    <td class="value device" data-item="sn"><?=$device['sn']?> </td>
+    <td class="value device type" data-item="type"><?=$device['type']?> </td>
+    <td class="value device harmonic-barcode" data-item="asset_harmonic" align="center"><?=$device['asset_harmonic']?> </td>  
+    <td class="value device gl-barcode" data-item="asset_gl"  align="center" ><?=$device['asset_gl']?> </td>
+    <td class="value device sn" data-item="sn"><?=$device['sn']?> </td>
+    <td class="value device pn" data-item="pn"><?=$device['pn']?></td>
     <td class="value device owner" data-item="owner"><?=$device['employee_name']?> </td>
     <td class="value device team" data-item="team"><?=$device['team_name']?> </td>
-    <td class="status hide-td">
+    <td class="working-status edit">
+        <span class="lable"></span>
+        <span class="glyphicon glyphicon-edit td-icon edit-work"></span>
+    </td>
+    <td class="transfer-status edit">
+        <span class="lable"></span>
+        <span class="glyphicon glyphicon-edit td-icon edit-trans"></span>
+    </td>
+    <td class="status hide-td place">
         <?php if($device['id_location']==='1'):?>
         <span class="glyphicon infoRack" data-id-device-in-rack="<?=$device['id_device_in_rack']?>">
             rack
@@ -34,9 +57,13 @@
         </span>
         <?php endif;?>
     </td>
-    <td class="hide-td icon"><span class="glyphicon glyphicon-info-sign info info-device"  data-id-device="<?=$device['id_device']?>"></span></td>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-info-sign info info-device" data-toggle="tooltip"  data-id-device="<?=$device['id_device']?>" title="show detail information"></span></td>
     <?php if($_SESSION['level']=='0'):?>
-    <td class="hide-td icon"><span class="glyphicon glyphicon-edit edit-device"></span></td>
-    <td class="hide-td icon"><span class="glyphicon glyphicon-remove remove-device"></span></td>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-edit edit-device" data-toggle="tooltip" title="edit device"></span></td>
+    <?php if($device['id_location']=='4'):?>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-transfer transfer" data-toggle="tooltip"  title="transfer to another location"></span></td>
+    <?php endif;?>                    
+    <td class="icon hide-td"><span class="glyphicon glyphicon-plus add-module first" data-toggle="tooltip"  title="add module/card"></span></td>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-remove remove-device" data-toggle="tooltip"  title="remove device from database"></span></td>      
     <?php endif;?>
 </tr>

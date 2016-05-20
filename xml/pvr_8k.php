@@ -1,9 +1,9 @@
 <?php
 /*
- * Get information from PVR 7K (rev more at least 4.x) or 8K
+ * Get information from PVR 8K
  */
 include_once 'function.php';
-$ip = $_GET['ip'];
+$ip=$_GET['ip'];
 
 
 $request_inventory = '<?xml version="1.0" encoding="UTF-8"?>
@@ -22,12 +22,9 @@ function get_modules_xml_info($ip, $request_xml) {
     
     $not_show = [
         'Platform',
-        'Power Supply Slot',
-        'Front panel Slot',
-        'Fans Slot',
-        'Rotem Slot'
+        'PowerSupply',
+        'Lcd'
     ];
-
     foreach ($module_list as $value) {
         $descr=(string)$value['Name'];
         if (!in_array($descr, $not_show)) {
@@ -36,17 +33,9 @@ function get_modules_xml_info($ip, $request_xml) {
                 'pn' => (string) $value['PN'],
                 'sn' => (string) $value['SN']];
 
-            if (preg_match('/Arave FE 1 Port/i', $module['name'])) {
-                $module['name'] = 'Arava 1 Channels';
-            } elseif (preg_match('/Arave FE 4 Port/i', $module['name'])) {
-                $module['name'] = 'Arava 4 Channels';
+            if (preg_match('/MainBoard/i', $module['descr'])) {
+                $module['name'] = 'Mainboard PVR 8K';
             } 
-            elseif (preg_match('/Mainboard/i', $module['name'])) {
-                $module['name'] = 'Mainboard';
-            } 
-            elseif (preg_match('/XCoder Rev/i', $module['name'])) {
-                $module['name'] = 'XCoder';
-            }
             $modules[] = $module;
         }
     }

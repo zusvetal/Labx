@@ -190,6 +190,7 @@ background-color: rgba(218, 223, 42, 0.5);
 /*************************** Buttons ******************************************/
 /*******************************************************************************/
 .a-btn{
+    background-color: transparent;
     border-color:#ccc !important;
     color:black;
     margin: 5px;
@@ -361,7 +362,13 @@ table.pointer{
 .right-border {
     border-right: 1px solid #ccc !important; 
 }
+.left-border {
+    border-left: 1px solid #ccc !important; 
+}
 .bottom-border {
+    border-bottom: 1px solid #ccc !important; 
+}
+.top-border {
     border-bottom: 1px solid #ccc !important; 
 }
 th{
@@ -761,7 +768,7 @@ table.patch td.descr{
 /************************ elements_dropdown.html ******************************/
 /*******************************************************************************/
 
-button.search-element{
+button.elements-toggle{
     height:  34px !important;
     background: #fff;
 }
@@ -970,36 +977,76 @@ td.icon{
 {
     display:inline;
 }
-#devicesTable .table-module .act span{
+
+#devicesTable tr.module .act span{
     display: none;
 }
-#devicesTable .table-module tr:hover .act span{
+#devicesTable  tr.module:hover .act span{
     display: inline;
 }
 
-#devicesTable tr.modules-list{
+
+
+
+#devicesTable{
+   font-size: 16px;
+/*   font-weight: 500;*/
+}
+
+/*#devicesTable tr.modules-list{
+    display: none;
+}*/
+#devicesTable tbody.modules{
     display: none;
 }
-#devicesTable tbody.modules{
-    font-size: 12px;
-    font-weight: 600;
-  
+#devicesTable th{
+   background-color: rgba(140, 138, 83, 0.2);
+}
+/*#devicesTable tbody:nth-of-type(1) tr{
+   border-top-left-radius: 20px;
+   border-top-right-radius: 20px;
+}*/
+
+#devicesTable tr.item td{
+    border-top: solid 2px #ccc;
+    border-bottom: solid 2px #ccc;
+/*    border-left: none;
+    border-right: none;*/
 }
 #devicesTable tbody{
     border-top: none;
     border-bottom: none;
 }
 
-.table-locations tr{
-    text-align: center;
-    cursor:pointer;
+
+/*#devicesTable tbody.modules{
+    font-size: 14px;
+    font-weight: 400;
+    border:solid 1px #ccc;
+
 }
+#devicesTable tbody.modules td{
+    border:solid 1px #ccc;
+
+}*/
+#devicesTable tr.module{
+    display:none;
+}
+#devicesTable tr.module td{
+    border:solid 1px #ccc;
+    font-size: 13px;
+    font-weight: 400;
+}
+
 #devicesTable .working-status, #devicesTable .transfer-status{
     display:none;
     font-size: 12px;
     font-weight: 600;
 }
-
+.table-locations tr{
+    text-align: center;
+    cursor:pointer;
+}
 /*******************************************************************************/
 /************************ vm_list.html ******************************/
 /*******************************************************************************/

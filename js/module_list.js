@@ -58,7 +58,7 @@ $('#content').on('click.modules', '.remove-module', function () {
 /****************** edit module over edit-module icon *************************/
 /******************************************************************************/
 
-$('#content').on('click.devices', 'span.edit-module', function (event) {
+$('#content').on('click.modules', 'span.edit-module', function (event) {
     event.preventDefault();
     var $icon=$(this),
             modal = new Modal(),
@@ -85,7 +85,6 @@ $('#content').on('click.devices', 'span.edit-module', function (event) {
             })
             .then(function (tr) {
                 $tr.replaceWith(tr)
-//                highLightNewEntry();
                 recountNumber($('td.number'));
                 modal.hide();
             });

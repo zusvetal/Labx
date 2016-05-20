@@ -27,14 +27,13 @@ $('#content').on('click.devices', 'span.add', function (event) {
                 return form.eventListener();
             })
             .then(function (idDevice) {
-                console.log(idDevice);
                 modal.hide();
                 return getDeviceRow(idDevice);
             })
             .then(function (newDevice) {
-               $('table tr.item:nth-of-type(1)').after(newDevice);
+               $('table tbody  tr.item:nth-of-type(1)').before(newDevice);
                 recountNumber($('td.number'));
-                highLightNewEntry($('table tr.item:nth-of-type(2)'));
+                highLightNewEntry($('table tbody tr.item:nth-of-type(1)'));
             });          
 });
 
@@ -133,18 +132,25 @@ $('#content').on('click.devices', 'span.edit-device', function (event) {
 $('#content').on('click.devices', 'span.show-modules', function () {
     var $icon = $(this),
             $tr=$icon.closest('tr'),
-            $modulesTr = $tr.find('+ tr.modules-list');
+            $modulesTr = $tr.find('+tr.module');
     if ($modulesTr.length > 0) {
-        $modulesTr.fadeToggle('100');
         if ($icon.hasClass('glyphicon-chevron-down')) {
             $icon.removeClass('glyphicon-chevron-down')
                     .addClass('glyphicon-chevron-up');
             $tr.addClass('choose3');
+            while ($modulesTr.length > 0) {
+                $modulesTr.fadeIn('100');
+                $modulesTr = $modulesTr.find('+tr.module');
+            }
         }
         else {
             $icon.removeClass('glyphicon-chevron-up')
-                    .addClass('glyphicon-chevron-down')
+                    .addClass('glyphicon-chevron-down');
             $tr.removeClass('choose3');
+            while ($modulesTr.length > 0) {
+                $modulesTr.fadeOut('100');
+                $modulesTr = $modulesTr.find('+tr.module');
+            }
         }
 
     }
@@ -168,8 +174,7 @@ $('#content').on('click.devices', 'span.add-module', function (event) {
     var $tr = $(this).closest('tr'),
             idDevice = $tr.data('idDevice'),
             modal = new Modal(),
-            list = new FreeEquipList('module', idDevice),
-            firstModule=$(this).hasClass('first')?true:false;
+            list = new FreeEquipList('module', idDevice);
     event.preventDefault();
     modal.getModal($('#unusedModuleList'))
             .then(function () {
@@ -178,9 +183,6 @@ $('#content').on('click.devices', 'span.add-module', function (event) {
                 /*Action after closing modal window*/
                 $('#content').on('hidden.bs.modal', modal.object, function () {
                     $tr.removeClass('info');
-                    if(firstModule){
-                        document.location.reload();
-                    }
                 });
                 return list.getList(modal.getBodyField());
             })
@@ -191,13 +193,13 @@ $('#content').on('click.devices', 'span.add-module', function (event) {
             })
             .then(function (idModule) {
                 modal.hide();
-                return getModuleRow(idModule)
+                return getModuleRow(idModule);
             })
             .then(function (row) {
-                $tr.find('table tbody')
-                        .prepend(row);
-                highLightNewEntry($tr.find('table tr:nth-of-type(1)'));
-            })
+                $tr.after(row);
+                $tr.find('+tr.module').show();
+                highLightNewEntry($tr.find('+tr.module'));
+            });
 });
 
 
@@ -206,18 +208,23 @@ $('#content').on('click.devices', 'span.add-module', function (event) {
 /******************************************************************************/
 var unbindDeviceFromModule = function (idModule) {
     updateValue('module_list', 'id_device', '0', 'id_module', idModule);
-
-}
+};
 
 $('#content').on('click.devices', 'span.unbind', function () {
-    var tr = $(this).closest('tr'),
-            idModule = $(tr).data('idModule');
+    var $tr = $(this).closest('tr'),
+            $deviceTr = $tr.prevAll('.item').eq(0),
+            idModule = $tr.data('idModule');
     $.confirm("Do you want to unbind this module?")
             .then(function () {
-                    unbindDeviceFromModule(idModule);
-                    $(tr).fadeOut('slow', function () {
-                        $(this).remove();
-                    });
+                unbindDeviceFromModule(idModule);
+                return  $tr.fadeOut('slow');
+            })
+            .then(function () {
+                $(this).remove();
+                if ($deviceTr.find('+tr.module').length < 1) {
+                    $deviceTr.removeClass('choose3');
+                    $deviceTr.find('.show-modules').remove();
+                }
             });
 });
 /******************************************************************************/
@@ -502,3 +509,8 @@ $('#content').on('click.devices', '.edit-work', function (event) {
 /******************************************************************************/
 /******************************* Init settings ********************************/
 /******************************************************************************/
+//$(document).ready(function() 
+//    { 
+//        $('#infoField table').tablesorter(); 
+//    } 
+//); 

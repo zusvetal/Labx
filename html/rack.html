@@ -67,7 +67,7 @@
                             <!-- check number of tower device -->
                             <?php if($_SESSION['level']=='0'):?>
                                 <?php if(count($device['tower_devices'])<3):?>
-                                    <div class="tools wrap-add-tower" align="center"><span class="glyphicon glyphicon-plus add-device add-tower"></span></div>
+                                    <div class="tools wrap-add-tower" align="center"><span class="glyphicon glyphicon-plus add-tower"></span></div>
                                 <?php endif;?>
                             <?php endif;?> 
                             <?php foreach( $device['tower_devices'] as $id_tower=> $tower):?>

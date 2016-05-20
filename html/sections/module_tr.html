@@ -1,13 +1,24 @@
-<tr  class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-module="<?=$module['id_module']?>">
-    <td class="number"</td>
+<tr  class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-module="<?=$id_module?>"
+     data-id-transfer-status="<?=$module['id_transfer_status']?>"
+     data-id-work-status="<?=$module['id_work_status']?>">        
+    <td class="number"><?=$num?></td>
     <td class="value model" data-item="model"><?=$module['model']?> </td>
-    <td class="value" data-item="sn"><?=$module['sn']?> </td>
-    <td class="value" data-item="pn"><?=$module['pn']?> </td>
-    <td class="value" data-item="asset_harmonic"><?=$module['asset_harmonic']?> </td>  
-    <td class="value" data-item="asset_gl"><?=$module['asset_gl']?> </td>
+    <td class="value type" data-item="type"><?=$module['type']?> </td>
+    <td class="value sn" data-item="sn"><?=$module['sn']?> </td>
+    <td class="value pn" data-item="pn"><?=$module['pn']?> </td>
+    <td class="value harmonic-barcode" data-item="asset_harmonic"><?=$module['asset_harmonic']?> </td>  
+    <td class="value gl-barcode" data-item="asset_gl"><?=$module['asset_gl']?> </td>
     <td class="value owner" data-item="owner"><?=$module['employee_name']?> </td>
     <td class="value team" data-item="team"><?=$module['team_name']?> </td>
-    <td class="status hide-td">
+    <td class="working-status edit">
+        <span class="lable"></span>
+        <span class="glyphicon glyphicon-edit td-icon edit-work"></span>
+    </td>
+    <td class="transfer-status edit">
+        <span class="lable"></span>
+        <span class="glyphicon glyphicon-edit td-icon edit-trans"></span>
+    </td>
+    <td class="status hide-td  free-status">
         <?php if(!empty($module['id_device'])):?>
         <span class="glyphicon used" data-toggle="popover" data-id-device="<?=$module['id_device']?>">used</span>
         <?php else:?>
@@ -16,7 +27,10 @@
     </td>
     <td class="hide-td icon"><span class="glyphicon glyphicon-info-sign info info-module"></span></td>
     <?php if($_SESSION['level']=='0'):?>
-    <td class="hide-td icon"><span class="glyphicon glyphicon-edit edit-module"></span></td>
-    <td class="hide-td icon"><span class="glyphicon glyphicon-remove remove-module"></span></td>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-edit edit-module" title="edit device"></span></td>
+    <?php if($module['id_device']==='0'):?>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-transfer transfer" title="transfer to another location"></span></td>
+    <?php endif;?>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-remove remove-module" title="remove device from database"></span></td>      
     <?php endif;?>
 </tr>

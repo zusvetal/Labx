@@ -113,20 +113,7 @@ function get_value_full_list($table, $where_col, $where_value) {
     }
     return !empty($value) ? $value : false;
 }
-function get_elements_list($table, $id_col, $name_col) {
-    $query="SELECT $id_col,$name_col FROM $table";  
-    $id_global_field=mysqli_query(db::$link,"SELECT id_global_location FROM $table ");
-    if($id_global_field){
-        $query.=" WHERE id_global_location=".$_SESSION['id_global_location'];       
-    }
-    $result= mysqli_query(db::$link,$query) 
-            or die("Invalid query: " . mysqli_error(db::$link));
-    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-        $elements[$row[$id_col]] = $row[$name_col];
-    }
-    
-    return $elements;
-}
+
 function get_interface_list($id_device, $id_type = false) {
     $query = "SELECT
             id_interface,
@@ -267,11 +254,19 @@ function get_device_list($model = false) {
             asset_harmonic,
             asset_gl,
             device_list.id_team,
-            id_global_location
+            id_global_location,
+            size_in_unit,
+            device_model.id_device_type,
+            device_type.name AS type,
+            id_formfactor
 	FROM 
            device_list
         NATURAL JOIN
            device_model
+        LEFT JOIN 
+           device_type
+        ON
+            device_type.id_device_type=device_model.id_device_type
         LEFT JOIN
             location
         ON
@@ -303,7 +298,6 @@ function get_free_device_list($model) {
             employee_name,
             model,
             sn,
-            pn,
             asset_harmonic,
             asset_gl,
             device_list.id_global_location
@@ -338,7 +332,6 @@ function get_free_module_list() {
             module_list.id_model,
             model,
             sn,
-            pn,
             asset_harmonic,
             asset_gl,
             id_owner,
@@ -374,22 +367,31 @@ function get_module_list($id_device = false) {
             model,
             icon_name,
             sn,
-            pn,
             asset_harmonic,
             asset_gl,
             id_owner,
             id_global_location,
-            module_list.id_team
+            module_list.id_team,
+            module_model.id_device_type,
+            device_type.name AS type,
+            pn_name AS pn
 	FROM 
-           module_list,
+           module_list
+        NATURAL JOIN
            module_model
+        LEFT JOIN
+            device_type
+        ON
+            device_type.id_device_type=module_model.id_device_type
+        LEFT JOIN
+            module_pn
+        ON
+            module_pn.id_module_pn=module_list.id_module_pn
         WHERE
-            module_list.id_model=module_model.id_model
-        AND
             id_global_location=".$_SESSION['id_global_location']."
 	";
     if ($id_device!==false) {
-        $query .= "AND id_device='$id_device'";
+        $query .= " AND id_device='$id_device'";
     }
     $query.=" ORDER BY id_module DESC ";
     $result = mysqli_query(db::$link, $query)
@@ -407,19 +409,23 @@ function get_module($id_module) {
             model,
             icon_name,
             sn,
-            pn,
             asset_harmonic,
             asset_gl,
             id_owner,
             comment,
             id_global_location,
-            id_team
+            id_team,
+            module_model.id_device_type,
+            device_type.name AS type
 	FROM 
-           module_list,
+           module_list
+        NATURAL JOIN   
            module_model
+        LEFT JOIN 
+           device_type
+        ON
+            device_type.id_device_type=module_model.id_device_type
         WHERE
-            module_list.id_model=module_model.id_model
-        AND
             module_list.id_module=$id_module
 	";
 
@@ -437,20 +443,29 @@ function get_device($id_device) {
             device_list.id_model,
             model,
             sn,
-            pn,
             asset_harmonic,
             asset_gl,
             id_owner,
             icon_name,
             comment,
             id_team,
-            id_global_location
+            id_global_location,
+            size_in_unit,
+            id_device_type,
+            id_formfactor,
+            device_type.name AS type,
+            pn_name AS pn
 	FROM 
-           device_list,
+           device_list
+        NATURAL JOIN 
            device_model
+        NATURAL JOIN 
+           device_type
+        LEFT JOIN
+           device_pn
+        ON
+            device_pn.id_device_pn=device_list.id_device_pn
         WHERE
-            device_list.id_model=device_model.id_model
-        AND
             device_list.id_device=$id_device
 	";
 
@@ -904,11 +919,46 @@ function search_model($value, $table) {
     }
     return false;
 }
-function search_list($table, $id_col, $search_col, $value) {
-    $query = "SELECT $id_col, $search_col FROM $table WHERE $search_col LIKE '%$value%' ";
+function get_elements_list($table, $id_col, $name_col,$addition=false) {
+    $elements='';
+    $query="SELECT $id_col,$name_col FROM $table";  
+    $id_global_field=mysqli_query(db::$link,"SELECT id_global_location FROM $table ");
+    if($id_global_field){
+        $query.=" WHERE id_global_location=".$_SESSION['id_global_location'];       
+    }
+    if($addition){
+        $col=$addition['col'];
+        $value=$addition['value'];
+        $query.=($id_global_field)?" AND $col='$value' " : " WHERE $col='$value' ";
+    }
+    $result= mysqli_query(db::$link,$query) 
+            or die("Invalid query: " . mysqli_error(db::$link));
+   
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $elements[$row[$id_col]] = $row[$name_col];
+    }  
+    
+    return $elements;
+}
+
+function search_list($table, $id_col, $search_col, $value,$addition=false) {
+    $query = "SELECT
+                $id_col, 
+                $search_col
+            FROM 
+                $table
+            WHERE
+                $search_col
+            LIKE
+                '%$value%'";
     $id_global_field = mysqli_query(db::$link, "SELECT id_global_location FROM $table ");
     if ($id_global_field) {
         $query.=" AND id_global_location=" . $_SESSION['id_global_location'];
+    }
+    if ($addition) {
+        $col = $addition['col'];
+        $value = $addition['value'];
+        $query.=" AND $col='$value'";
     }
     $result = mysqli_query(db::$link, $query)
             or die("Invalid query: " . mysqli_error(db::$link));
@@ -970,11 +1020,22 @@ function get_search_device($keys=false) {
             device_list.id_global_location,
             work_status_name,
             device_list.id_work_status,
-            device_list.id_transfer_status
+            device_list.id_transfer_status,
+            device_model.id_device_type,
+            device_type.name AS type,
+            pn_name AS pn
 	FROM 
             device_list
 	NATURAL JOIN
-            device_model   
+            device_model
+        LEFT JOIN 
+           device_type
+        ON
+            device_type.id_device_type=device_model.id_device_type
+        LEFT JOIN
+            device_pn
+        ON
+            device_pn.id_device_pn=device_list.id_device_pn
 	LEFT JOIN
             team
         ON
@@ -1059,7 +1120,6 @@ function get_search_module($keys=false) {
             id_module,
             id_device,
             module_list.sn,
-            module_list.pn,
             model,
             module_list.id_model,
             module_list.id_owner,
@@ -1072,11 +1132,17 @@ function get_search_module($keys=false) {
             work_status.work_status_name,
             module_list.id_work_status,
             id_transfer_status,
-            id_device_type
+            module_model.id_device_type,
+            device_type.name AS type,
+            pn_name AS pn
 	FROM 
             module_list
 	NATURAL JOIN
-            module_model   
+            module_model  
+        LEFT JOIN 
+           device_type
+        ON
+            device_type.id_device_type=module_model.id_device_type
 	LEFT JOIN
             staff
         ON
@@ -1085,6 +1151,10 @@ function get_search_module($keys=false) {
             team
         ON
             team.id_team=module_list.id_team
+        LEFT JOIN
+            module_pn
+        ON
+            module_pn.id_module_pn=module_list.id_module_pn
         NATURAL JOIN
             work_status        
         WHERE
@@ -1105,7 +1175,7 @@ function get_search_module($keys=false) {
     }
     if (isset($keys['id_device_type'])&&$keys['id_device_type']==='0') {
         $query .= " AND id_device_type !=0 ";
-        unset($keys['id_work_status']);
+        unset($keys['id_device_type']);
     }
     if (isset($keys['id_device_type'])){
         $query .= " AND id_device_type= ".$keys['id_device_type']." ";

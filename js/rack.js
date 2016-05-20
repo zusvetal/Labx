@@ -130,44 +130,61 @@ $('#content ').on('keypress', 'input.input-link', function (event) {
 /******************************************************************************/
 /************************ Insert device to unit/slot **************************/
 /******************************************************************************/
-var elementNavigation = '<div id="elementNavigation" align="center">\
-    <button id="insertDevice" type="button" class="btn btn-primary">Device</button>\
-    <button id="insertPatchPanel" type="button" class="btn btn-primary">Patch panel</button>\
-    <button id="insertShelf" type="button" class="btn btn-primary">Shelf</button>\
-    <button id="insertOverBarcode" type="button" class="btn btn-primary">Over barcode</button>\
-</div>';
-
-/*Open modal window and add device into the rack*/
-$('#content').on('click', 'span.add-device', function () {
+/*Tower device*/
+$('#content').on('click', 'span.add-tower', function () {
     var $button = $(this),
             topSlot = $button.closest('tr').find('.number-of-unit').text().trim(),
             $rackBody = $button.closest('.rack-body'),
             idRack = $rackBody.find('#rackTable').data('idRack'),
-    modal = new Modal(),
-    insertForm = new insertDeviceIntoRack(idRack, topSlot),
-    barcode= new insertOverBarcodeForm(idRack,topSlot);
+            insertForm = new insertDeviceIntoRack(idRack, topSlot),
+            modal = new Modal();
     modal.getModal($('#addDeviceForm'))
             .then(function () {
                 $('#content').on('hidden.bs.modal', '#modalWindow', function () {
                     getRack($rackBody, idRack);
                 });
-                if ($button.hasClass('add-tower')) {
-                    modal.setTitle('Add device with tower form factor');
-                    insertForm.getForm(modal.getBodyField())
-                            .then(function ($form) {
-                                $form.find('select')
-                                        .val('2')
-                                        .attr('disabled', 'disabled');
-                                return insertForm.eventListener();
-                            })
-                            .then(function (idDeviceInRack) {
-                                modal.hide();
-                            });
-                }
-                else {
-                    modal.setTitle('Choose element you want to insert into the rack slot <b>' + topSlot + '</b>');
+                modal.setTitle('Add device with tower form factor');
+                modal.show();
+                return insertForm.getForm(modal.getBodyField());
+            })
+            .then(function ($form) {
+                $form.find('select')
+                        .val('2')
+                        .attr('disabled', 'disabled');
+                return insertForm.eventListener();
+            })
+            .then(function () {
+                modal.hide();
+            });
+});
+/*Rack device*/
+$('#content').on('click', 'span.add-device', function () {
+    var $button = $(this),
+            topSlot = $button.closest('tr').find('.number-of-unit').text().trim(),
+            $rackBody = $button.closest('.rack-body'),
+            idRack = $rackBody.find('#rackTable').data('idRack'),
+            modal = new Modal(),
+            insertForm = new insertDeviceIntoRack(idRack, topSlot),
+            elementNavigation = '\
+                <center>\
+                    <div id="elementNavigation" class=" btn-group">\
+                        <button id="insertOverBarcode" type="button" class="btn btn-primary">Over barcode</button>\
+                        <button id="insertOverSn" type="button" class="btn btn-primary">Over S/N</button>\
+                        <button id="insertDevice" type="button" class="btn btn-primary">Device</button>\
+                        <button id="insertPatchPanel" type="button" class="btn btn-primary">Patch panel</button>\
+                        <button id="insertShelf" type="button" class="btn btn-primary">Shelf</button>\
+                    </div>\
+                </center>';
+    modal.getModal($('#addDeviceForm'))
+            .then(function () {
+                $('#content').on('hidden.bs.modal', '#modalWindow', function () {
+                    getRack($rackBody, idRack);
+                });
+                $('#content').on('shown.bs.modal', '#modalWindow', function () {
+                    $('#insertOverBarcode').focus(); 
+                });
+                    modal.setTitle('Choose element you want to insert into the rack slot <b>' + topSlot + '</b>');               
                     modal.addBody(elementNavigation);
-                }
                 $('#content').on('click', '#elementNavigation button', function () {
                     switch ($(this).attr('id')) {
                         case 'insertDevice':
@@ -194,6 +211,7 @@ $('#content').on('click', 'span.add-device', function () {
                                     });
                             break
                         case 'insertOverBarcode':
+                            var barcode = new ParametrForm(idRack, topSlot, 'barcode');
                             barcode.getForm(modal.getBodyField())
                                     .then(function () {
                                         return barcode.eventListener();
@@ -202,10 +220,22 @@ $('#content').on('click', 'span.add-device', function () {
                                         modal.hide();
                                     })
                             break;
+                        case 'insertOverSn':
+                            var sn = new ParametrForm(idRack, topSlot, 'sn');
+                            sn.getForm(modal.getBodyField())
+                                    .then(function () {
+                                        return sn.eventListener();
+                                    })
+                                    .then(function () {
+                                        modal.hide();
+                                    })
+                            break;
+                            
                     }
                     $('#content').off('click', '#elementNavigation button');
                 });
                 modal.show();
+                
             });
 });
 
@@ -221,13 +251,14 @@ var moveToStorage = function (idDevice,idRack,slot) {
 };
 
 $('#content').on('click', '.del-device', function () {
-    var $unit = $(this).closest('.unit'),
+    var $btn = $(this),
+            $unit = $btn.closest('.unit'),
             idDeviceInRack, idPatchPanel, idShelf, idDevice,
             topSlot = $unit.attr('data-slot'),
             sizeUnits = $unit.attr('data-size'),
-            $rackBody = $(this).closest('.rack-body'),
+            $rackBody = $btn.closest('.rack-body'),
             idRack = $rackBody.find('#rackTable').data('idRack');
-    switch ($(this).attr('data-type')) {
+    switch ($btn.attr('data-type')) {
     case 'device':
             $.confirm("Do yo really want to remove device from rack?")
                     .then(function () {
@@ -266,8 +297,8 @@ $('#content').on('click', '.del-device', function () {
         case 'tower':
             $.confirm("Do yo really want to remove PC from rack?")
                     .then(function () {
-                        idDevice = $(this).closest('.tower').attr('data-id-device');
-                        idDeviceInRack = $(this).closest('.tower').attr('data-id-device-in-rack');
+                        idDevice = $btn.closest('.tower').attr('data-id-device');
+                        idDeviceInRack = $btn.closest('.tower').attr('data-id-device-in-rack');
                         return deleteValue('devices_in_racks', 'id_device_in_rack', idDeviceInRack);
                     })
                     .then(function () {

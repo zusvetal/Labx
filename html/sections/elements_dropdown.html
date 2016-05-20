@@ -2,16 +2,17 @@
 <div id="dropDown" class="row">
     <div class="width">
         <div class="input-group">
-            <input  id="searchInput" type="text" class="form-control search-element" data-id-element="0">
+            <input  id="searchInput" type="text" class="form-control search-element " data-id-element="0">
             <div class="input-group-btn">
-                <button type="button" class="btn btn-default search-element">
+                <button type="button" class="btn btn-default elements-toggle">
                     <span class="caret"></span>
-                    <span class="sr-only">Toggle Dropdown</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-right search-element-list">
+                    <?php if(!empty($elements)):?>
                     <?php foreach( $elements as $id_element => $name):?>
                     <li><a href="#searchInput" data-id-element="<?=$id_element?>"><?=$name?></a></li>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </ul>
             </div><!-- /btn-group -->
         </div><!-- /input-group -->
@@ -22,9 +23,11 @@
         <div class="width">
             <select class="form-control search-element">
                 <option value="0">-------------</option>
-                <?php foreach( $elements as $id_element => $name):?>
+                <?php if(!empty($elements)):?>
+                <?php foreach( $elements as $id_element => $name):?>              
                 <option value="<?=$id_element?>"><?=$name?></option>
                 <?php endforeach; ?>
+                <?php endif; ?>
             </select>
         </div><!-- /.col-lg-8 -->
     </div><!-- /.row -->

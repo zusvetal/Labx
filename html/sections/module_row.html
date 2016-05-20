@@ -1,11 +1,17 @@
 <tr  class="module" data-id-module="<?=$module['id_module']?>">
-    <td></td>
-    <td>•</td>
-    <td  data-item="model"><?=$module['model']?> </td>
-    <td  data-item="asset_harmonic" title="Harmonic barcode"><?=$module['asset_harmonic']?> </td>  
-    <td  data-item="sn" title="Serial Number"><?=$module['sn']?> </td> 
-    <td  data-item="pn" title="Part Number"><?=$module['pn']?> </td>
+    <td  class="hide-td"></td>
+    <td  class="ip hide-td"></td>
+    <td  class="host hide-td"></td>
+    <td  class="hide-td right-border" align="right">•</td>
+    <td  class="model" data-item="model"><?=$module['model']?> </td>
+    <td  class="type" data-item="type"><?=$module['type']?> </td>
+    <td  class="harmonic-barcode" data-item="asset_harmonic" ><?=$module['asset_harmonic']?> </td>
+    <td  class="gl-barcode" data-item="asset_gl"><?=$module['asset_gl']?> </td>  
+    <td  class="sn" data-item="sn" ><?=$module['sn']?> </td> 
+    <td  class="pn" data-item="pn" ><?=$module['pn']?> </td>
+    <td  class="owner" data-item="owner"> </td>
+    <td  class="team" data-item="team"> </td>
     <?php if($_SESSION['level']=='0'):?>
-    <td class="hide-td"><span class="glyphicon glyphicon-remove unbind"></span></td>
+    <td class="hide-td icon"><span class="glyphicon glyphicon-remove unbind" data-toggle="tooltip"  title="unbind card/module"></span></td>
     <?php endif;?>
 </tr>

@@ -40,8 +40,14 @@ if (isset($_POST['insert_value_list'])) {
 }
 if (isset($_POST['elements_dropdown'])) {
     $type=$_POST['type'];
-    $elements = get_elements_list($_POST['table'], $_POST['id_col'], $_POST['search_col']);
+    $addition=  isset($_POST['addition'])?$_POST['addition']:false;
+    $elements = get_elements_list($_POST['table'], $_POST['id_col'], $_POST['search_col'],$addition);
     include 'html/sections/elements_dropdown.html';
+}
+if (isset($_POST['search_list'])) {
+    $addition=  isset($_POST['addition'])?$_POST['addition']:false;
+    $list = search_list($_POST['table'], $_POST['id_col'], $_POST['search_col'], $_POST['value'],$addition);
+    echo $list !== false ? json_encode($list) : '0';
 }
 if (isset($_POST['get_modal_window'])) {
     include 'html/modal_window.html';
@@ -71,6 +77,7 @@ if (isset($_POST['get_device_tr'])) {
     $device = get_device($_POST['id_device']);
     $device['employee_name'] = get_value('staff', 'employee_name', 'id_employee', $device['id_owner']);
     $device['team_name'] = get_value('team', 'team_name', 'id_team', $device['id_team']);
+    $device['host'] = '';
     include 'html/sections/device_tr.html';
 }
 if (isset($_POST['get_vm_tr'])) {
@@ -99,9 +106,9 @@ if (isset($_POST['get_device_to_rack_form'])) {
     $slot = $_POST['slot'];
     include 'html/forms/device_to_rack_form.html';
 }
-if (isset($_POST['get_barcode_form'])) {
+if (isset($_POST['get_parametr_form'])) {
     $slot = $_POST['slot'];
-    include 'html/forms/barcode_form.html';
+    include 'html/forms/parametr_form.html';
 }
 if (isset($_POST['get_labdesk_device_form'])) {
     include 'html/forms/labdesk_device_form.html';
@@ -161,10 +168,6 @@ if (isset($_POST['update_link'])) {
 if (isset($_POST['model_search'])) {
     $models = search_model($_POST['value'], $_POST['table']);
     echo $models !== false ? json_encode($models) : '0';
-}
-if (isset($_POST['search_list'])) {
-    $list = search_list($_POST['table'], $_POST['id_col'], $_POST['search_col'], $_POST['value']);
-    echo $list !== false ? json_encode($list) : '0';
 }
 if (isset($_POST['check_empty_space'])) {
     $id_rack = $_POST['id_rack'];
@@ -293,6 +296,9 @@ if (isset($_POST['device_json_info'])) {
         $device['descr'] = $labdesk_name;
     } elseif ($device['id_location'] === '3') {
         $device['descr'] = get_value('staff', 'employee_name', 'id_employee', get_value('devices_on_hands', 'id_employee', 'id_device', $id_device));
+    }
+    elseif ($device['id_location'] === '4') {
+        $device['descr'] = 'storage';
     }
     echo json_encode($device);
 }

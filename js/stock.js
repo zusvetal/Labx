@@ -82,7 +82,7 @@ var checkViewOption = function () {
 /******************************************************************************/
 
 /*** Location ***/
-$('#content').on('click', 'a.key[data-key="id_location"]', function () {
+$('#content').on('click', 'button.key[data-key="id_location"]', function () {
     var $btn = $(this),
             location = new List('location', 'id_location', 'name', {type: 'select',width:'12'});
     if ($btn.hasClass('choose')) {
@@ -108,7 +108,7 @@ $('#content').on('click', 'a.key[data-key="id_location"]', function () {
 });
 
 /*** Status ***/
-$('#content').on('click', 'a.key[data-key="status"]', function () {
+$('#content').on('click', 'button.key[data-key="status"]', function () {
     var $btn = $(this);
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
@@ -132,7 +132,7 @@ $('#content').on('click', 'a.key[data-key="status"]', function () {
 });
 
 /*** Vm ***/
-$('#content').on('click', 'a.key[data-key="vm"]', function () {
+$('#content').on('click', 'button.key[data-key="vm"]', function () {
     var $btn = $(this);
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
@@ -153,7 +153,7 @@ $('#content').on('click', 'a.key[data-key="vm"]', function () {
 });
 
 /*** Transfer ***/
-$('#content').on('click', 'a.key[data-key="id_transfer_status"]', function () {
+$('#content').on('click', 'button.key[data-key="id_transfer_status"]', function () {
     var $btn = $(this),
    status = new List('transfer_status', 'id_transfer_status', 'transfer_status_name', {type: 'select',width:'12'});
     if ($btn.hasClass('choose')) {
@@ -180,7 +180,7 @@ $('#content').on('click', 'a.key[data-key="id_transfer_status"]', function () {
 });
 
 /*** Operability ***/
-$('#content').on('click', 'a.key[data-key="id_work_status"]', function () {
+$('#content').on('click', 'button.key[data-key="id_work_status"]', function () {
     var $btn = $(this),
    status = new List('work_status', 'id_work_status', 'work_status_name', {type: 'select',width:'12'});
     if ($btn.hasClass('choose')) {
@@ -206,7 +206,7 @@ $('#content').on('click', 'a.key[data-key="id_work_status"]', function () {
     }
 });
 /*** Device type ***/
-$('#content').on('click', 'a.key[data-key="id_device_type"]', function () {
+$('#content').on('click', 'button.key[data-key="id_device_type"]', function () {
 
     var $btn = $(this),
    type = new List('device_type', 'id_device_type', 'name', {type: 'select',width:'12'});
@@ -235,7 +235,7 @@ $('#content').on('click', 'a.key[data-key="id_device_type"]', function () {
 });
 
 /*** Other key button ***/
-$('#content').on('click', 'a.key', function () {
+$('#content').on('click', 'button.key', function () {
     var $btn = $(this),
             key = $btn.data('key'),
             item = $btn.text();
@@ -265,7 +265,7 @@ $('#content').on('click', '.close-field', function () {
     item=$field.attr('id');
     $field.fadeOut(function(){
        $(this).remove();
-       $('a.key[data-key="'+item+'"]').removeClass('choose');
+       $('button.key[data-key="'+item+'"]').removeClass('choose');
        search();
     });   
 });
@@ -382,30 +382,97 @@ var workingStatus = function ($btn) {
         $('#keyList').append('<a  class="btn a-btn key single" data-key="id_work_status">Operability</a>');
         showWorkStatus();
     }
-}
+};
 $('#menuField').on('click', '.work-status', function () {
     var $btn = $(this);
     workingStatus($btn);
 
 });
+
+
 /*** Export to EXEL ***/
-$('#menuField').on('click', '.export-to-exel', function () {
-    var $btn = $(this);
-    $('#devicesTable').tableExport({fileName: 'Devices table', type: 'xls', escape: 'false'});
+$('#menuField').on('click', '.export-to-excel', function () {
+    var $btn = $(this),
+            tableName = $('#infoField h3').text();
+    $('#infoField table').tableExport({fileName: tableName, type: 'excel', escape: 'false'});
 });
+
+
 /*** Export to PDF ***/
 $('#menuField').on('click', '.export-to-pdf', function () {
-    var $btn = $(this);
-    $('#devicesTable').tableExport({fileName: 'Devices table', type: 'pdf', escape: 'false',
+    var $btn = $(this),
+            tableName = $('#infoField h3').text();
+    $('#infoField table').tableExport({fileName: tableName, type: 'pdf', escape: 'false',
         jspdf: {
-            margins: 
+            margins:
                     {left: 20, right: 10, top: 20, bottom: 20},
-            autotable: 
-                    {styles: {overflow: 'linebreak'}}
+            autotable:
+                    {
+                        styles: {overflow: 'linebreak',textColor: 'inherit'}       
+            }
         }
     });
+});
+
+
+/*** Export to PNG ***/
+$('#menuField').on('click', '.export-to-png', function () {
+    var $btn = $(this),
+            tableName = $('#infoField h3').text();
+    $('#infoField table').tableExport({fileName: tableName, type: 'png', escape: 'false'});
 
 });
+
+
+/*** show/hide modules ***/
+$('#menuField').on('click', '.show-all-modules', function () {
+    var $btn = $(this);
+    $btn.removeClass('show-all-modules')
+            .addClass('hide-all-modules');
+    $btn.find('p')
+            .text('hide cards');
+    $btn.find('span')
+            .removeClass('glyphicon-folder-open')
+            .addClass('glyphicon-folder-close');
+    $('#infoField tr.item').each(function () {
+        var $tr = $(this),
+                $icon = $tr.find('.show-modules'),
+                $modulesTr = $tr.find('+tr.module');
+        if ($modulesTr.length > 0) {
+            $icon.removeClass('glyphicon-chevron-down')
+                    .addClass('glyphicon-chevron-up');
+            $tr.addClass('choose3');
+            while ($modulesTr.length > 0) {
+                $modulesTr.fadeIn('100');
+                $modulesTr = $modulesTr.find('+tr.module');
+            }
+        }
+    });
+});
+$('#menuField').on('click', '.hide-all-modules', function () {
+    var $btn = $(this);
+    $btn.removeClass('hide-all-modules')
+            .addClass('show-all-modules');
+    $btn.find('p')
+            .text('show cards');
+    $btn.find('span')
+            .removeClass('glyphicon-folder-close')
+            .addClass('glyphicon-folder-open');
+    $('#infoField tr.item').each(function () {
+        var $tr = $(this),
+                $icon = $tr.find('.show-modules'),
+                $modulesTr = $tr.find('+tr.module');
+        if ($modulesTr.length > 0) {
+            $icon.removeClass('glyphicon-chevron-up')
+                    .addClass('glyphicon-chevron-down');
+            $tr.removeClass('choose3');
+            while ($modulesTr.length > 0) {
+                $modulesTr.fadeOut('100');
+                $modulesTr = $modulesTr.find('+tr.module');
+            }
+        }
+    });   
+});  
 /******************************************************************************/
 /***************************** View menu component ***************************/
 /******************************************************************************/

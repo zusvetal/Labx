@@ -1,11 +1,12 @@
-<h3>Available modules </h3>
+<h3>Available cards </h3>
 <?php if($_SESSION['level']=='0'):?>
 <span class="add glyphicon glyphicon-plus"></span>
 <?php endif;?>
 <table id="modulesTable" class="table table-hover table-bordered" >
     <tr>
         <th></th>
-        <th class="model">Module model</th>
+        <th class="model">Model</th>
+        <th class="type">Type</th>
         <th class="sn">S/N</th>
         <th class="pn">P/N</th>
         <th class="harmonic-barcode">Harmonic asset</th>
@@ -24,6 +25,7 @@
          data-id-work-status="<?=$module['id_work_status']?>">        
         <td class="number"><?=$num?></td>
         <td class="value model" data-item="model"><?=$module['model']?> </td>
+        <td class="value type" data-item="type"><?=$module['type']?> </td>
         <td class="value sn" data-item="sn"><?=$module['sn']?> </td>
         <td class="value pn" data-item="pn"><?=$module['pn']?> </td>
         <td class="value harmonic-barcode" data-item="asset_harmonic"><?=$module['asset_harmonic']?> </td>  

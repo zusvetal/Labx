@@ -87,6 +87,20 @@ var insertValueList = function (table, values) {
     }
     ).responseText.trim();
 };
+var insertValueListAsync = function (table, values, callback) {
+    return $.post(
+            "/ajax",
+            {
+                insert_value_list: '1',
+                table: table,
+                values: values
+            },
+    function (data) {
+        if (typeof callback !== 'undefined') {
+            callback(data);
+        }
+    });
+};
 var insertValue = function (table, col, value) {
     return $.ajax({
         url: "/ajax",
@@ -156,6 +170,21 @@ var getValueList = function (table, col, where_col, where_value, callback) {
             );
 
 };
+var getValueListSync = function (table, col, where_col, where_value) {
+    return $.ajax({
+        url: "/ajax",
+        async: false,
+        type: "POST",
+        dataType: "json",
+        data: {
+            get_value_list: '1',
+            table: table,
+            col: col,
+            where_col: where_col,
+            where_value: where_value
+        }
+    }).responseJSON;
+};
 var getValues = function (table, where_col, where_value) {
     return $.post(
             "/ajax",
@@ -174,6 +203,7 @@ var getValues = function (table, where_col, where_value) {
             );
 
 };
+
 var highLightNewEntry = function (element) {
     $(element).addClass('new-entry');
     setTimeout(function () {
@@ -411,13 +441,14 @@ var Modal = function () {
         $('#modalDialog').css('width', width);
     };
 };
-var List = function (table, idField, searchField,options) {
+var List = function (table, idField, searchField, options) {
     /*
      * settings.width  from 1 to 12
      */
     var settings = {
         type: 'dropdown',
-        width:'8'
+        width: '8',
+        addition: false
     };
     if (options) {
         $.extend(settings, options);
@@ -427,29 +458,28 @@ var List = function (table, idField, searchField,options) {
     this.searchField = searchField;
     this.getElementsDropDown = function ($parentEl, callback) {
         this.$parentEl = $parentEl;
-        var modelName = $parentEl.text(),
-                eventListener = this.eventListener,
-                getLiveSearchList = this.getLiveSearchList;
-                
-       return  $.post(
-                "/ajax",
-                {
+        var eventListener = this.eventListener,
+                getLiveSearchList = this.getLiveSearchList,
+                postParam = {
                     elements_dropdown: '1',
                     table: table,
                     id_col: idField,
                     search_col: searchField,
-                    type:settings.type
+                    type: settings.type
+                };
 
-                },
-        function (data) {
-            $parentEl.html(data);
-            $parentEl.find('input').val(modelName);
-            $parentEl.find('.width').addClass('col-lg-'+settings.width);
-            if (typeof callback !== 'undefined') {
-                callback($parentEl);
-            }
-            eventListener($parentEl, getLiveSearchList);
-        });
+        if (settings.addition) {
+            postParam['addition'] = settings.addition;
+        }
+        return  $.post("/ajax", postParam)
+                .then(function (data) {
+                    $parentEl.html(data);
+                    $parentEl.find('.width').addClass('col-lg-' + settings.width);
+                    if (typeof callback !== 'undefined') {
+                        callback($parentEl);
+                    }
+                    eventListener($parentEl, getLiveSearchList);
+                });
     };
     this.eventListener = function ($parentEl, getLiveSearchList) {
         $parentEl.on('keyup.search', 'input.search-element', function (event) {
@@ -457,7 +487,7 @@ var List = function (table, idField, searchField,options) {
             var key = event.keyCode,
                     inputValue = $(this).val().trim(),
                     $itemField = $parentEl.find('ul.search-element-list'),
-                    $searchButton = $parentEl.find('button.search-element'),
+                    $searchButton = $parentEl.find('button.elements-toggle'),
                     $input = $parentEl.find('input.search-element'),
                     idElement;
             if (key === 40) {
@@ -466,7 +496,8 @@ var List = function (table, idField, searchField,options) {
                         .focus();
                 return false;
             }
-            if ($.inArray(key, noCharKey) == -1) {
+            if ($.inArray(key, noCharKey) == -1)
+            {
                 getLiveSearchList(inputValue, function (data) {
                     if (data.trim() !== '0') {
                         var listOfElement = JSON.parse(data);
@@ -568,9 +599,8 @@ var List = function (table, idField, searchField,options) {
                     .slideUp();
         });
 
-        $parentEl.on('click.search', 'button.search-element', function (event) {
+        $parentEl.on('click.search', 'button.elements-toggle', function (event) {
             var $itemField = $parentEl.find('ul.search-element-list');
-            // event.preventDefault();
             if ($itemField.is(":visible")) {
                 $itemField.slideUp();
             }
@@ -593,61 +623,69 @@ var List = function (table, idField, searchField,options) {
         return result === '0' ? false : result;
     };
     this.getLiveSearchList = function (inputValue, callback) {
+        var postParam = {
+            search_list: '1',
+            value: inputValue,
+            table: table,
+            search_col: searchField,
+            id_col: idField
+        }
+        if (settings.addition) {
+            postParam['addition'] = settings.addition;
+        }
         $.post(
-                "/ajax",
-                {
-                    search_list: '1',
-                    value: inputValue,
-                    table: table,
-                    search_col: searchField,
-                    id_col: idField
-                },
-        function (data) {
-            if (typeof callback !== 'undefined') {
-                callback(data);
-            }
-        });
+                '/ajax', postParam,
+                function (data) {
+                    if (typeof callback !== 'undefined') {
+                        callback(data);
+                    }
+                });
     };
     this.destroyEvents = function () {
-        this.$parentEl.unbind('.search');
+        this.$parentEl.off('.search', '**');
     };
-    this.addElementToDb = function (elementName) {
+    this.addElementToDb = function (elementName, addition) {
         /*return id of adding to database element*/
-        return insertValue(table, searchField, elementName);
+        var insertValues = {};
+        insertValues[searchField] = elementName;
+        if (addition) {
+            $.extend(insertValues, addition);
+        }
+        return insertValueList(table, insertValues);
     };
     this.getInputVal = function () {
-        if (settings.type==='dropdown' && this.$parentEl.find('.search-element').val() !== undefined) {
-            return this.$parentEl.find('.search-element').val().trim();
+        if (settings.type === 'dropdown' && this.$parentEl.find('input.search-element').val() !== undefined) {
+            return this.$parentEl.find('input.search-element').val().trim();
         }
-        else if(settings.type==='select' && this.$parentEl.find('.search-element :selected').text() !==undefined ){
-            return this.$parentEl.find('.search-element :selected').text();
+        else if (settings.type === 'select' && this.$parentEl.find('select.search-element :selected').text() !== undefined) {
+            return this.$parentEl.find('select.search-element :selected').text();
         }
         return false;
     };
     this.setInputVal = function (value) {
         if (settings.type === 'dropdown') {
-            return this.$parentEl.find('.search-element').val(value);
+            return this.$parentEl.find('input.search-element').val(value);
         }
         else if (settings.type === 'select') {
-           return  this.$parentEl.find(' .search-element option:contains("'+value+'")').attr("selected", "selected");      
-        }     
+            return  this.$parentEl.find(' select.search-element option:contains("' + value + '")').attr("selected", "selected");
+        }
     };
     this.getElementId = function () {
-        if(settings.type==='dropdown'){
-            return this.$parentEl.find('.search-element').attr('data-id-element');
+        if (settings.type === 'dropdown') {
+            return this.$parentEl.find('input.search-element').attr('data-id-element');
         }
-        else if(settings.type==='select'){
-            return this.$parentEl.find('.search-element').val();
+        else if (settings.type === 'select') {
+            return this.$parentEl.find('select.search-element').val();
         }
-        
+
     };
     this.setElementId = function (id) {
         if (settings.type === 'dropdown') {
             return this.$parentEl.find('input.search-element').attr('data-id-element', id);
         }
         else if (settings.type === 'select') {
-            return this.$parentEl.find('.search-element [value="'+id+'"]').attr('selected', 'selected');
-        }       
+            return this.$parentEl.find('.search-element [value="' + id + '"]').attr('selected', 'selected');
+        }
     };
     this.focusToInputField = function () {
         this.$parentEl.find('.search-element').focus();
@@ -667,7 +705,8 @@ var List = function (table, idField, searchField,options) {
 };
 var GettingInfoFromDevice = function (modelName, ip) {
     var
-            patternPVR = /pvr.[78]\d{2,3}/i,
+            patternPVR8K = /pvr.[8]\d{2,3}/i,
+            patternPVR7K = /pvr.[7]\d{2,3}/i,
             patternPVR2900 = /pvr.2\d{2,3}/i,
             patternEllipse = /ellipse.[123]\d{2,3}/i,
             patternCisco = /cisco.\w*[3]\d{2,3}[\w\s-]*/i,
@@ -684,8 +723,11 @@ var GettingInfoFromDevice = function (modelName, ip) {
     this.modelName = modelName;
     this.ip = ip;
     this.abilityGettingInfo = true;
-    if (patternPVR.test(modelName)) {
-        this.scriptPath = "/snmp/pvr";
+    if (patternPVR8K.test(modelName)) {
+        this.scriptPath = "/snmp/pvr_8k";
+    }
+    else if (patternPVR7K.test(modelName)) {
+        this.scriptPath = "/snmp/pvr_7k";
     }
     else if (patternPVR2900.test(modelName)) {
         this.scriptPath = "/snmp/pvr_2900";
@@ -865,15 +907,15 @@ var deviceModuleTable = function ($parentEl, idDevice) {
         });
     };
     var pnTd = function (pnFromDevice, pnFromDb) {
-        var title = 'add element to database';
+        var title = 'update database with this card';
         if (pnFromDb.trim() == pnFromDevice.trim()) {
             return '<td>' + pnFromDevice + '</td>';
         }
         else {
             if (pnFromDevice !== '') {
                 return    '<td class="info edit" data-item="pn">\
-                          <span class="value">' + pnFromDevice + '<span>\
-                          <span class="glyphicon glyphicon-pencil td-icon update-el"  title="' + title + '"></span>\
+                          <span class="value">' + pnFromDevice + '</span>\
+                          <span class="glyphicon glyphicon-pencil td-icon update-el" data-toggle="tooltip" title="' + title + '"></span>\
                     </td>';
             }
             else {
@@ -884,7 +926,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
     var createModulesTable = function (infoFromDB, infoFromDevice) {
         var db = infoFromDB,
                 device = infoFromDevice,
-                sn, exist, pnFromDevice, nameFromDevice, descr, title, tr,
+                sn, exist, pnFromDevice,pnFromDb, nameFromDevice, descr, title, tr,
                 table = '\
                             <table id="modules" class="table table-bordered">';
         if (db.length !== '0') {
@@ -896,6 +938,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                     for (var i in device) {
                         if (device[i]['sn'].trim() == sn) {
                             pnFromDevice = device[i]['pn'];
+                            pnFromDb=(db[idModule]['pn']!==null) ? db[idModule]['pn'] : '';
                             descr = device[i]['descr'];
                             nameFromDevice = device[i]['name'];
                             exist = true;
@@ -904,16 +947,17 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                         }
                     }
                     if (exist) {
-                        title = 'add element to database';
+                        title = 'update database with this card';
                         tr = '<tr data-id-module="' + idModule + '">';
-                        tr += (db[idModule]['model'] === nameFromDevice) ?
-                                '<td>' + nameFromDevice + '</td>' :
-                                '<td class="info edit" data-item="model">\
-                                    <span class="value">' + nameFromDevice + '<span>\
-                                    <span class="glyphicon glyphicon-pencil td-icon"></span>\
-                                </td>';
+//                        tr += (db[idModule]['model'] === nameFromDevice) ?
+//                                '<td>' + nameFromDevice + '</td>' :
+//                                '<td class="info edit" data-item="model">\
+//                                    <span class="value">' + nameFromDevice + '<span>\
+//                                    <span class="glyphicon glyphicon-pencil td-icon" data-toggle="tooltip" title="'+title+'"></span>\
+//                                </td>';
+                        tr += '<td>' + db[idModule]['model'] + '</td>';
                         tr += '<td>' + sn + '</td>';
-                        tr += pnTd(pnFromDevice, db[idModule]['pn']);
+                        tr += pnTd(pnFromDevice, pnFromDb);
                         tr += '<td>' + descr + '</td>';
                         table += tr;
 
@@ -942,7 +986,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
             table += '<tr class="warning new-modules">\
                                 <td class="edit">\
                                     <span class="name">' + device[j]['name'] + '<span>\
-                                   <span class="glyphicon glyphicon-plus td-icon add-module" title="' + title + '"></span>\
+                                   <span class="glyphicon glyphicon-plus td-icon add-module" data-toggle="tooltip" title="' + title + '"></span>\
                                 </td>\
                                <td class="sn">' + device[j]['sn'] + '</td>\
                                <td class="pn">' + device[j]['pn'] + '</td>\
@@ -952,8 +996,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
         table += '</table>';
         return table;
     };
-    //$parentEl.off('.cards', '**');
-    $parentEl.on('click.cards', '.add-module', function () {
+    $parentEl.on('click.innerCards', '.add-module', function () {
         var $tr = $(this).closest('tr'),
                 moduleModel = $tr.find('.name').text().trim(),
                 sn = $tr.find('td.sn').text().trim(),
@@ -961,9 +1004,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
         var form = new Form('module');
         form.getForm($('#addModuleToDB'), {model: moduleModel, sn: sn, pn: pn})
                 .then(function () {
-                    $('#modalWindow').animate({
-                        scrollTop: $('#addForm').offset().top
-                    }, 1000);
+                    slideToEl($('#modalWindow'), $('#addForm'))
                     return form.eventListener();
                 })
                 .then(function (idModule) {
@@ -976,22 +1017,45 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                     $('#modules').prepend($tr);
                 });
     });
-    $parentEl.on('click.cards', '.update-el', function () {
+    $parentEl.on('click.innerCards', '.update-el', function () {
         var $tr = $(this).closest('tr'),
                 $td = $(this).closest('td'),
                 item = $td.data('item'),
-                value = $td.find('.value').text(),
-                idModule = $tr.data('idModule');
-        updateValue('module_list', item, value, 'id_module', idModule, function () {
-            $td.removeClass('info')
-                    .text(value);
-        });
+                value = $td.find('.value').text().trim(),
+                idModule = $tr.data('idModule'),
+                idModel=getValue('module_list','id_model','id_module',idModule),
+                idPn;
+        if (item === 'pn') {
+            idPn = getValue('module_pn', 'id_module_pn', 'pn_name', value);
+            if (idPn != 0) {
+               console.log(idPn,idModule);
+                updateValue('module_list', 'id_module_pn', idPn, 'id_module', idModule)
+                        .then(function () {
+                            $td.removeClass('info').text(value);
+                        });
+            } else {
+                $.confirm('<center>P/N <b> ' + value + '</b> does not exist in database.<br> Add to database?</center>')
+                        .then(function () {
+                            return insertValueListAsync('module_pn', {pn_name: value, id_model: idModel});
+                        })
+                        .then(function (id) {
+                            return updateValue('module_list', 'id_module_pn', id, 'id_module', idModule);
+                        })
+                        .then(function () {
+                            $td.removeClass('info').text(value);
+                        });
+            }
+        }
+//        updateValue('module_list', item, value, 'id_module', idModule, function () {
+//            $td.removeClass('info')
+//                    .text(value);
+//        });
     });
 
     var dfd = jQuery.Deferred(),
-    infoFromDevice, ip, info,
-    modelName = getValue('device_model', 'model', 'id_model', getValue('device_list', 'id_model', 'id_device', idDevice)),
-    section=('\
+            infoFromDevice, ip, info,
+            modelName = getValue('device_model', 'model', 'id_model', getValue('device_list', 'id_model', 'id_device', idDevice)),
+            section = ('\
     <div class="section-header">\
         <a class=" collapsed" data-toggle="collapse"  href="#cardsCollapse" aria-expanded="true" aria-controls="cardsCollapse">\
             Device cards\
@@ -1027,7 +1091,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                                     return  getMondulesInfoFromDB(idDevice);
                                 })
                                 .then(function (infoFromDB) {
-                                    console.log(infoFromDB)
+                                    console.log(infoFromDB);
                                     $parentEl.html(section)
                                     var $newModules = $parentEl.find('.section-content').html(createModulesTable(infoFromDB, infoFromDevice));
                                     if ($newModules.length !== 0) {
@@ -1332,7 +1396,7 @@ var LabdeskForm = function (idLabdesk) {
                             .then(function (id) {
                                 idModel = id;
                                 return $.when();
-                            })                          
+                            })
                 }
                 promise
                         .then(function () {
@@ -1455,12 +1519,12 @@ var interfaceForm = function () {
             if (idInterface !== 0) {
                 $.confirm("Do you want to remove network interface")
                         .then(function () {
-                           return getValues('interfaces', 'id_interface', idInterface)
+                            return getValues('interfaces', 'id_interface', idInterface)
                         })
                         .then(function (interface) {
                             if (interface) {
                                 addDeviceEvent(idDevice, 'Remove interface with ip - "' + interface['ip'] + '", host - "' + interface['host'] + '" ');
-                            } 
+                            }
                             return deleteValue('interfaces', 'id_interface', idInterface)
                         })
                         .then(function () {
@@ -1610,10 +1674,10 @@ var interfaceForm = function () {
                             idInterface = $interface.data('idInterface') !== 0 ? $interface.data('idInterface') : insertValue('interfaces', 'id_device', idDevice);
                     getValues('interfaces', 'id_interface', idInterface)
                             .then(function (interface) {
-                                if(interface['ip']===''&&interface['host']===''){
-                                    addDeviceEvent(idDevice, 'Add new interface with ip - "'+ip+'", host - "'+host+'" ');
-                                }else if(interface['ip'] !== ip || interface['host'] !== host){
-                                    addDeviceEvent(idDevice, 'Change interface  ip - "'+interface['ip']+'", host - "'+interface['host']+'"  to "'+ip+'", "'+host+'"');
+                                if (interface['ip'] === '' && interface['host'] === '') {
+                                    addDeviceEvent(idDevice, 'Add new interface with ip - "' + ip + '", host - "' + host + '" ');
+                                } else if (interface['ip'] !== ip || interface['host'] !== host) {
+                                    addDeviceEvent(idDevice, 'Change interface  ip - "' + interface['ip'] + '", host - "' + interface['host'] + '"  to "' + ip + '", "' + host + '"');
                                 }
                                 return updateValueList('interfaces', {ip: ip, host: host, id_type: idType}, 'id_interface', idInterface);
                             })
@@ -1658,7 +1722,9 @@ var Form = function (type, callback) {
             tableModel: 'device_model',
             type: 'device',
             tableList: 'device_list',
-            idField: 'id_device'
+            idField: 'id_device',
+            tablePn: 'device_pn',
+            idPnField: 'id_device_pn'
         };
     }
     else if (this.type === 'module') {
@@ -1666,13 +1732,15 @@ var Form = function (type, callback) {
             tableModel: 'module_model',
             type: 'module',
             tableList: 'module_list',
-            idField: 'id_module'
+            idField: 'id_module',
+            tablePn: 'module_pn',
+            idPnField: 'id_module_pn'
         };
     }
-    
     var ownerList = new List('staff', 'id_employee', 'employee_name');
     var teamList = new List('team', 'id_team', 'team_name');
-    var modelList = new List(param.tableModel, 'id_model', 'model');
+    var modelList = new List(param.tableModel, 'id_model', 'model', {width: '9'});
+    var pnList = new List(param.tablePn, param.idPnField, 'pn_name', {addition: {col: 'id_model', value: '0'}});
     this.getForm = function ($parentEl, options, callback) {
         /*define method argument*/
         if (typeof options === 'function') {
@@ -1683,9 +1751,9 @@ var Form = function (type, callback) {
             options = {};
         }
         /***********************************/
-        
+
         var dfd = jQuery.Deferred(),
-    /*form can be for add new device or edit old*/
+                /*form can be for add new device or edit old*/
                 action = (options.id !== undefined) ? 'update' : 'insert';
         this.$parentEl = $parentEl;
         this.id = options.id;
@@ -1704,20 +1772,28 @@ var Form = function (type, callback) {
                         .then(function (values) {
                             if (values) {
                                 /*Section with dropdown elements*/
-                                ownerList.getElementsDropDown($('#deviceOwner'), function () {
+                                console.log(values);
+                                pnList = new List(param.tablePn, param.idPnField, 'pn_name', {addition: {col: 'id_model', value: values.id_model}});
+                                pnList.getElementsDropDown($parentEl.find('#pn'), function () {
+                                    pnList.setElementId(values[param.idPnField]);
+                                    if (values[param.idPnField] !== '0') {
+                                        pnList.setInputVal(getValue(param.tablePn, 'pn_name', param.idPnField, values[param.idPnField]));
+                                    }
+                                });
+                                ownerList.getElementsDropDown($parentEl.find('#deviceOwner'), function () {
                                     ownerList.setElementId(values.id_owner);
                                     if (values.id_owner !== '0') {
                                         ownerList.setInputVal(getValue('staff', 'employee_name', 'id_employee', values.id_owner));
                                     }
 
                                 });
-                                modelList.getElementsDropDown($('#modelDevice'), function () {
+                                modelList.getElementsDropDown($parentEl.find('#modelDevice'), function () {
                                     modelList.setElementId(values.id_model);
                                     if (values.id_model !== '0') {
                                         modelList.setInputVal(getValue(param.tableModel, 'model', 'id_model', values.id_model));
                                     }
                                 });
-                                teamList.getElementsDropDown($('#deviceTeam'), function () {
+                                teamList.getElementsDropDown($parentEl.find('#deviceTeam'), function () {
                                     teamList.setElementId(values.id_team);
                                     if (values.id_team !== '0') {
                                         teamList.setInputVal(getValue('team', 'team_name', 'id_team', values.id_team));
@@ -1741,19 +1817,25 @@ var Form = function (type, callback) {
                         });
             }
             else if (action === 'insert') {
-                ownerList.getElementsDropDown($('#deviceOwner'), function () {
+                pnList.getElementsDropDown($parentEl.find('#pn'), function () {
+                    if (options.pn !== undefined) {
+                        pnList.setInputVal(options.pn);
+                        pnList.setElementId(getValue(param.tablePn, param.idPnField, 'pn_name', options.pn));
+                    }
+                });
+                ownerList.getElementsDropDown($parentEl.find('#deviceOwner'), function () {
                     if (options.owner !== undefined) {
                         ownerList.setInputVal(options.owner);
                         ownerList.setElementId(getValue('staff', 'id_employee', 'employee_name', options.owner));
                     }
                 });
-                modelList.getElementsDropDown($('#modelDevice'), function () {
+                modelList.getElementsDropDown($parentEl.find('#modelDevice'), function () {
                     if (options.model !== undefined) {
                         modelList.setInputVal(options.model);
                         modelList.setElementId(getValue(param.tableModel, 'id_model', 'model', options.model));
                     }
                 });
-                teamList.getElementsDropDown($('#deviceTeam'), function () {
+                teamList.getElementsDropDown($parentEl.find('#deviceTeam'), function () {
                     if (options.team !== undefined) {
                         teamList.setInputVal(options.team);
                         teamList.setElementId(getValue('team', 'id_team', 'team_name', options.team));
@@ -1784,50 +1866,24 @@ var Form = function (type, callback) {
                     idEmployee = ownerList.getElementId(),
                     idModel = modelList.getElementId(),
                     idTeam = teamList.getElementId(),
+                    idPn = pnList.getElementId(),
                     comment = $parentEl.find('#comment').summernote('code'),
+                    idGlobalLocation=getIdGlobalLocation(),
                     item,
                     value,
                     modelName,
                     count,
+                    pn = pnList.getInputVal(),
                     modelName = modelList.getInputVal(),
                     ownerName = ownerList.getInputVal(),
                     teamName = teamList.getInputVal();
-
             if (modelName !== '') {
                 /**checking the existence of team and owner**/
                 var promise = $.when();
-                if (idEmployee === '0' && ownerName !== '') {
-                    promise = promise
-                            .then(function () {
-                                return $.confirm("<center><b>" + ownerName + "</b> not exist in the db.\n Add employee <b>'" + ownerName + "'</b> to database?</center>");
-                            })
-                            .then(
-                                    function (result) {
-                                        idEmployee = ownerList.addElementToDb(ownerName);
-                                    },
-                                    function (result) {
-                                        return $.when();
-                                    }
-                            );
-                }
-                if (idTeam === '0' && teamName !== '') {
-                    promise = promise
-                            .then(function () {
-                                return $.confirm("center><b>" + teamName + "</b> not exist in the db.\n Add team <b>'" + teamName + "'</b> to database?</center>");
-                            })
-                            .then(
-                                    function (result) {
-                                        idTeam = teamList.addElementToDb(teamName);
-                                    },
-                                    function (result) {
-                                        return $.when();
-                                    }
-                            );
-                }
                 if (idModel === '0') {
                     promise = promise
                             .then(function () {
-                                return $.confirm("<center><b>" + modelName + "</b> not exist in the db.<br/> Add <b>'" + modelName + "'</b> to model database?</center>");
+                                return $.confirm("<center>Model <b> " + modelName + "</b> not exist in the db.<br/> Add <b>'" + modelName + "'</b> to model database?</center>");
                             })
                             .then(
                                     function () {
@@ -1852,35 +1908,77 @@ var Form = function (type, callback) {
                             .then(function (id) {
                                 idModel = id;
                                 return $.when();
+                            });
+                }
+                if (idPn === '0' && pn !== '') {
+                    promise = promise
+                            .then(function () {
+                                return $.confirm("<center>P/N  <b>" + pn + "</b> for model <b>" + modelName + "</b> not exist in the db.\n Add P/N <b>'" + pn + "'</b> to database?</center>");
                             })
+                            .then(
+                                    function () {
+                                        idPn = pnList.addElementToDb(pn, {id_model: idModel});
+
+                                    },
+                                    function () {
+                                        return $.when();
+                                    }
+                            );
+                }
+                if (idEmployee === '0' && ownerName !== '') {
+                    promise = promise
+                            .then(function () {
+                                return $.confirm("<center>Employee <b>" + ownerName + "</b> not exist in the db.\n Add employee <b>'" + ownerName + "'</b> to database?</center>");
+                            })
+                            .then(
+                                    function (result) {
+                                        idEmployee = ownerList.addElementToDb(ownerName,{id_global_location:idGlobalLocation});
+                                    },
+                                    function (result) {
+                                        return $.when();
+                                    }
+                            );
+                }
+                if (idTeam === '0' && teamName !== '') {
+                    promise = promise
+                            .then(function () {
+                                return $.confirm("<center>Team <b>" + teamName + "</b> not exist in the db.\n Add team <b>'" + teamName + "'</b> to database?</center>");
+                            })
+                            .then(
+                                    function (result) {
+                                        idTeam = teamList.addElementToDb(teamName,{id_global_location:idGlobalLocation});
+                                    },
+                                    function (result) {
+                                        return $.when();
+                                    }
+                            );
                 }
                 if (action === 'insert') {
                     promise = promise
                             .then(function () {
                                 idElement = insertValue(param.tableList, 'id_model', idModel);
                                 return $.when();
-                            })
+                            });
                 }
                 promise = promise
                         .then(function () {
-                            return updateValueList(param.tableList,
-                                    {id_model: idModel,
-                                        id_team: idTeam,
-                                        id_owner: idEmployee,
-                                        id_global_location: idGlobalLocation,
-                                        sn: $parentEl.find('[name="sn"]').val(),
-                                        pn: $parentEl.find('[name="pn"]').val(),
-                                        asset_gl: $parentEl.find('[name="asset_gl"]').val(),
-                                        asset_harmonic: $parentEl.find('[name="asset_harmonic"]').val(),
-                                        comment: comment
-                                    },
-                            param.idField, idElement);
+                            var updateParams = {id_model: idModel,
+                                id_team: idTeam,
+                                id_owner: idEmployee,
+                                id_global_location: idGlobalLocation,
+                                sn: $parentEl.find('[name="sn"]').val(),
+                                pn: $parentEl.find('[name="pn"]').val(),
+                                asset_gl: $parentEl.find('[name="asset_gl"]').val(),
+                                asset_harmonic: $parentEl.find('[name="asset_harmonic"]').val(),
+                                comment: comment
+                            };
+                            updateParams[param.idPnField] = idPn;
+                            return updateValueList(param.tableList, updateParams, param.idField, idElement);
                         });
-                console.log(promise);
                 promise
                         .then(function () {
                             $parentEl.empty();
-                            console.log('resolve', idElement)
+                            console.log('resolve, id: ', idElement);
                             dfd.resolve(idElement);
                             dfd.always($parentEl.off('.form', '**'));
                             if (callback && typeof (callback) === "function") {
@@ -1896,6 +1994,11 @@ var Form = function (type, callback) {
         $parentEl.on('click.form', '#closeForm', function () {
             $(this).closest('#addForm').remove();
             $parentEl.off('.form', '**');
+        });
+        modelList.changeElement(function (event, idModel) {
+            pnList.destroyEvents();
+            pnList = new List(param.tablePn, param.idPnField, 'pn_name', {addition: {col: 'id_model', value: idModel}});
+            pnList.getElementsDropDown($parentEl.find('#pn'));
         });
         return dfd.promise();
     };
@@ -1932,7 +2035,7 @@ var RackForm = function () {
                     idRack, idBackRack,
                     numOfUnitPattern = /^\d+$/,
                     permission = true,
-                    idGlobalLocation=getIdGlobalLocation(),
+                    idGlobalLocation = getIdGlobalLocation(),
                     labName = labList.getInputVal();
 
             if (!numOfUnitPattern.test(numOfUnit) || numOfUnit == '0') {
@@ -1943,7 +2046,7 @@ var RackForm = function () {
                 permission = false;
             }
             if (rackName !== '' && permission === true) {
-                var promise=$.when();
+                var promise = $.when();
                 /**checking the existence of labs**/
                 if (idLab === '0') {
                     if (labName === '') {
@@ -1970,7 +2073,7 @@ var RackForm = function () {
                                         }
                                 )
                                 .then(function () {
-                                    return updateValue('labs','id_global_location',idGlobalLocation,'id_lab',idLab);
+                                    return updateValue('labs', 'id_global_location', idGlobalLocation, 'id_lab', idLab);
                                 })
                     }
                 }
@@ -2110,9 +2213,9 @@ var EmployeeForm = function () {
                                 return $.when();
                             })
                 }
-                promise 
+                promise
                         .then(function () {
-                            return updateValueList('staff', {employee_name: name, id_team: idTeam,id_global_location:idGlobalLocation}, 'id_employee', idEmployee);
+                            return updateValueList('staff', {employee_name: name, id_team: idTeam, id_global_location: idGlobalLocation}, 'id_employee', idEmployee);
                         })
                         .then(function () {
                             dfd.resolve(idEmployee);
@@ -2391,134 +2494,169 @@ var insertDeviceIntoRack = function (idRack, topSlot, callback) {
         return dfd.promise();
     };
 };
-var insertOverBarcodeForm = function (idRack, topSlot, callback) {
+var ParametrForm = function (idRack, topSlot, type) {
+    var param;
     this.idRack = idRack;
     this.topSlot = topSlot;
+    this.type = type;
+    if (this.type === 'barcode' || typeof type === 'undefined') {
+        param = {
+            tableField: 'asset_harmonic',
+            type: 'barcode',
+            label: 'Barcode:'
+        };
+    }
+    else if (this.type === 'sn') {
+        param = {
+            tableField: 'sn',
+            type: 'sn',
+            label: 'Serial Number:'
+        };
+    }
     this.getForm = function ($parentEl, callback) {
         var idRack = this.idRack,
-                topSlot = this.topSlot;
-        var dfd = jQuery.Deferred();
+                topSlot = this.topSlot,
+                dfd = jQuery.Deferred();
         this.$parentEl = $parentEl;
 
-        $.post(
-                "/ajax",
-                {
-                    get_barcode_form: '1',
-                    slot: topSlot
-                },
-        function (form) {
-            $parentEl.html(form);
-            $parentEl.find('.barcode').focus();
-            if (callback && typeof (callback) === "function") {
-                callback($parentEl);
-            }
-            dfd.resolve($parentEl);
-        });
+        $.post("/ajax", {get_parametr_form: '1', slot: topSlot})
+                .then(function (form) {
+                    $parentEl.html(form);
+                    $parentEl.find('td.parametr').text(param.label)
+                    $parentEl.find('input[name="parametr"]').focus();
+
+                    if (callback && typeof (callback) === "function") {
+                        callback($parentEl);
+                    }
+                    dfd.resolve($parentEl);
+                });
         return dfd.promise();
     };
     this.eventListener = function () {
         var $parentEl = this.$parentEl,
                 idRack = this.idRack,
+                rackName = getValue('rack', 'name', 'id_rack', idRack),
+                newRackLocation = "Rack " + rackName + " slot " + topSlot,
                 dfd = jQuery.Deferred();
 
-        $parentEl.on('click.barcode', 'button.submit-barcode', function () {
-            var barcode = $parentEl.find('.barcode').val().trim(),
-                    rackName=getValue('rack','name','id_rack',idRack),
-                    newRackLocation="Rack "+rackName+" slot "+topSlot,
-                    numOfUnit,idDevice, idLocation, oldLocation, deviceInfo, idModel, idDeviceInRack, modelName, ip;
-            idDevice = getValue('device_list', 'id_device', 'asset_harmonic', barcode);
-            if (idDevice !== '0') {
-                /*device used in other location*/
-                idModel = getValue('device_list', 'id_model', 'id_device', idDevice);
-                idLocation = getValue('device_list', 'id_location', 'id_device', idDevice);
-                numOfUnit = getValue('device_model', 'size_in_unit', 'id_model', idModel);
-                /*"4" - id of storage location*/
-                if (idLocation !== '4') {
-                    getDeviceInfo(idDevice)
-                            .then(function (device) {
-                                $parentEl.find('.submit-barcode')
-                                        .attr('disabled', 'disabled');
-                                if (device) {
-                                    oldLocation=device['descr'];
-                                    warnMessage(
-                                            $parentEl.find('.info-field'),
-                                            '<br>Device is used in other location </b>.<br>\
+        $parentEl.on('submit.barcode', '#parametrForm', function (e) {
+            e.preventDefault();
+            var value = $(this).find('input[name="parametr"]').val().trim(),
+                    idDeviceInRack, idDevice,
+                    ids = getValueListSync('device_list', 'id_device', param.tableField, value);
+            /*check for existence device in db with such param*/
+            if (ids != '0') {
+                for (var i in ids) {
+                    (function () {
+                        var idDevice = ids[i];
+                        var idSubmitButton = 'moveSubmit' + idDevice;
+                        getDeviceInfo(idDevice)
+                                .then(function (device) {
+                                    var idModel = device['id_model'],
+                                            idLocation = device['id_location'],
+                                            numOfUnit = device['size_in_unit'],
+                                            idDeviceInRack, ip;
+                                    $parentEl.find('button[type="submit"]')
+                                            .attr('disabled', 'disabled');
+                                    /*"4" - id of storage location*/
+                                    if (idLocation !== '4' || ids.length > 1) {
+                                        var oldLocation = device['descr'];
+                                        warnMessage(
+                                                $parentEl.find('.info-field'),
+                                                '<br>Device is used in other location </b>.<br>\
                                                  Model: <b>' + device['model'] + '</b>, location: <b>' + device['descr'] + '</b><br><br>\
                                                  <center><b>Do you want move device to new location?</b></center>\
-                                                 <center><a id="moveSubmit" data-id-model=' + idModel + ' class="btn a-btn btn-lg">Ok</a><a id="moveReset" class="btn a-btn btn-lg">Cancel</a></center>'
-                                            ,
-                                            function () {
-                                                $parentEl.find('.barcode').focus();
-                                                $parentEl.find('.submit-barcode')
-                                                        .removeAttr('disabled');
-                                                $parentEl.find('.info-field').empty();
-
+                                                 <center>\
+                                                    <button id="moveSubmit" type="button" data-id-model=' + idModel + ' class="btn btn-default a-btn btn-lg">Ok</button>\
+                                                    <button id="moveReset" type="button" class="btn a-btn btn-lg btn-default">Cancel</button>\
+                                                </center>'
+                                                ,
+                                                function () {
+                                                    $parentEl.find('input[name="parametr"]').focus();
+                                                    $parentEl.find('button[type="submit"]')
+                                                            .removeAttr('disabled');
+                                                    $parentEl.find('.info-field').empty();
+                                                }
+                                        );
+                                        $parentEl.find('#moveSubmit').attr('id', idSubmitButton)
+                                        $parentEl.on('click.barcode', '#' + idSubmitButton, function () {
+                                            var mngIp;
+                                            if (!checkEmptySpaceInRack(idRack, topSlot, numOfUnit)) {
+                                                dangerMessage($parentEl.find('.info-field'), 'This device cannot insert in this unit. Not enough place');
                                             }
-                                    );
-
-                                }
-                            });
-                    $parentEl.on('click.barcode', '#moveSubmit', function () {
-                        var mngIp;
-                        if (!checkEmptySpaceInRack(idRack, topSlot, numOfUnit)) {
-                            dangerMessage($parentEl.find('.info-field'), 'This device cannot insert in this unit. Not enough place');
-                        }
-                        else {
-                            mngIp = getValue('devices_in_racks', 'mng_ip', 'id_device', idDevice);
-                            deleteValue('devices_in_racks', 'id_device', idDevice)
-                                    .then(function () {
-                                        idDeviceInRack = insertValueList('devices_in_racks', {mng_ip: mngIp, id_device: idDevice, unit: topSlot, size_in_unit: numOfUnit, id_rack: idRack, id_model: idModel});
-                                        /*"1" - id of rack location*/
-                                        updateValue('device_list', 'id_location', '1', 'id_device', idDevice, function () {
-                                            addDeviceEvent(idDevice, 'Move device from "'+oldLocation+'" to "'+newRackLocation+'"');
-                                            dfd.resolve(idDeviceInRack);
+                                            else {
+                                                mngIp = getValue('devices_in_racks', 'mng_ip', 'id_device', idDevice);
+                                                deleteValue('devices_in_racks', 'id_device', idDevice)
+                                                        .then(function () {
+                                                            return insertValueListAsync('devices_in_racks', {mng_ip: mngIp, id_device: idDevice, unit: topSlot, size_in_unit: numOfUnit, id_rack: idRack, id_model: idModel});
+                                                        })
+                                                        .then(function (id) {
+                                                            idDeviceInRack = id
+                                                            /*"1" - id of rack location*/
+                                                            return updateValue('device_list', 'id_location', '1', 'id_device', idDevice);
+                                                        })
+                                                        .then(function () {
+                                                            addDeviceEvent(idDevice, 'Move device from "' + oldLocation + '" to "' + newRackLocation + '"');
+                                                            dfd.resolve(idDeviceInRack);
+                                                        });
+                                            }
+                                            $parentEl.off('click.barcode', '#moveSubmit');
                                         });
-                                    })
-                        }
-                        $parentEl.off('click.barcode', '#moveSubmit');
-                    });
-                    $parentEl.on('click.barcode', '#moveReset', function () {
-                        $(this).closest('.info-field').empty();
-                        $parentEl.find('.submit-barcode')
-                                .removeAttr('disabled');
-                    });
-                }
-                /*Device locate in Storage -  Add to rack*/
-                else {
-                    if (!checkEmptySpaceInRack(idRack, topSlot, numOfUnit)) {
-                        dangerMessage($parentEl.find('.info-field'), 'This device cannot insert in this unit. Not enough place');
-                    }
-                    else {
-                        ip = getValue('interfaces', 'ip', 'id_device', idDevice);
-                        idDeviceInRack = insertValueList('devices_in_racks', {mng_ip: ip, id_device: idDevice, unit: topSlot, size_in_unit: numOfUnit, id_rack: idRack, id_model: idModel})
-                        /*"1" - id of rack location*/
-                        updateValue('device_list', 'id_location', '1', 'id_device', idDevice, function () {
-                            addDeviceEvent(idDevice, 'Move device from "Storage" to "'+newRackLocation+'"');
-                            dfd.resolve(idDeviceInRack);
-                        });
-                    }
+                                        $parentEl.on('click.barcode', '#moveReset', function () {
+                                            $(this).closest('.info-field').empty();
+                                            $parentEl.find('button[type="submit"]')
+                                                    .removeAttr('disabled');
+                                        });
+                                    }
+                                    /*Device locate in Storage -  Add to rack*/
+                                    else {
+                                        if (checkEmptySpaceInRack(idRack, topSlot, numOfUnit)) {
+                                            ip = getValue('interfaces', 'ip', 'id_device', idDevice);
+                                            insertValueListAsync('devices_in_racks', {mng_ip: ip, id_device: idDevice, unit: topSlot, size_in_unit: numOfUnit, id_rack: idRack, id_model: idModel})
+                                                    .then(function (id) {
+                                                        idDeviceInRack = id;
+                                                        /*"1" - id of rack location*/
+                                                        return updateValue('device_list', 'id_location', '1', 'id_device', idDevice);
+                                                    })
+                                                    .then(function () {
+                                                        addDeviceEvent(idDevice, 'Move device from "Storage" to "' + newRackLocation + '"');
+                                                        dfd.resolve(idDeviceInRack);
+                                                    })
+                                        }
+                                        else {
+                                            dangerMessage($parentEl.find('.info-field'), 'This device cannot insert in this unit. Not enough place');
+                                        }
+                                    }
+                                });
+                    })();
                 }
             }
             else {
+                /*adding new device to db*/
                 var insertForm = new insertDeviceIntoRack(idRack, topSlot);
                 var form = new Form('device');
                 insertForm.getForm($parentEl)
                         .then(function () {
-                            $parentEl.prepend('<div  class="title"></div>')
+                            $parentEl.prepend('<div  class="title"></div>');
                             infoMessage($parentEl.find('.title'),
-                                    'Device with barcode <b>' + barcode + '</b> doesn`t exist in database, add it to rack.');
+                                    'Device with ' + param.type + ' <b>' + value + '</b> doesn`t exist in database, add it to rack.');
                             return insertForm.eventListener();
                         })
                         .then(function (id) {
                             idDeviceInRack = id;
-                            idModel = getValue('devices_in_racks', 'id_model', 'id_device_in_rack', idDeviceInRack);
-                            modelName = getValue('device_model', 'model', 'id_model', idModel);
-                            return form.getForm($parentEl, {harmonicBarcode: barcode, model: modelName});
+                            var idModel = getValue('devices_in_racks', 'id_model', 'id_device_in_rack', idDeviceInRack),
+                                    modelName = getValue('device_model', 'model', 'id_model', idModel);
+                            if (param.type === 'barcode') {
+                                return form.getForm($parentEl, {harmonicBarcode: value, model: modelName});
+                            }
+                            else if (param.type === 'sn') {
+                                return form.getForm($parentEl, {sn: value, model: modelName});
+                            }
                         })
                         .then(function () {
-                            $parentEl.prepend('<div  class="title"></div>')
+                            $parentEl.prepend('<div  class="title"></div>');
                             infoMessage($parentEl.find('.title'),
-                                    'Device with barcode <b>' + barcode + '</b> doesn`t exist in database, add it to stock.');
+                                    'Device with ' + param.type + '<b>' + value + '</b> doesn`t exist in database, add it to stock.');
                             return form.eventListener();
                         })
                         .then(function (id) {
@@ -2529,9 +2667,12 @@ var insertOverBarcodeForm = function (idRack, topSlot, callback) {
                             return updateValue('device_list', 'id_location', '1', 'id_device', idDevice);
                         })
                         .then(function () {
-                            insertValueList('interfaces', {id_device: idDevice, ip: getValue('devices_in_racks', 'mng_ip', 'id_device', idDevice)})
-                            dfd.resolve();
+                            return getValueAsync('devices_in_racks', 'mng_ip', 'id_device', idDevice);
                         })
+                        .then(function (ip) {
+                            insertValueListAsync('interfaces', {id_device: idDevice, ip: ip});
+                            dfd.resolve();
+                        });
             }
         });
         $parentEl.on('click.barcode', '#closeForm', function () {
@@ -2598,7 +2739,7 @@ var ModelForm = function (type) {
                                     $parentEl
                                             .find('#imgField')
                                             .attr('data-icon', values.icon_name)
-                                            .html('<button type="button" class="close remove-image"><span>&times;</span></button>\
+                                            .html('<button type="button" class="close remove-form-image"><span>&times;</span></button>\
                                                  <img src="/icon/' + values.icon_name + '"/>');
                                 }
                                 else {
@@ -2695,39 +2836,70 @@ var ModelForm = function (type) {
                 dfd = jQuery.Deferred();
 
         $parentEl.on('click.model', '.remove-pn-db', function () {
-            var  
-                    $btn=$(this),
-                    $tr=$btn.closest('tr'),
-                    $input =$btn.closest('tr').find('input'),            
+            var
+                    $btn = $(this),
+                    $tr = $btn.closest('tr'),
+                    $input = $btn.closest('tr').find('input'),
                     pnName = $input.val(),
                     idPn = $input.data('idPn');
-            $.confirm('<center>Do yo really want to remove part number ' + pnName + ' from device model ?</center>')
-                    .then(function () {
-                        return  deleteValue(param.pnTable, param.idPnField, idPn);
-                    })
-                    .then(function () {
-                        return $tr.fadeOut('slow');
-                    })
-                    .then(function () {
-                        $tr.remove();
-                    });
+            if (idPn !== 0) {
+                $.confirm('<center>Do you really want to remove part number <b>' + pnName + '</b> from device model ?</center>')
+                        .then(function () {
+                            return  deleteValue(param.pnTable, param.idPnField, idPn);
+                        })
+                        .then(function () {
+                            return $tr.fadeOut('slow');
+                        })
+                        .then(function () {
+                            $tr.remove();
+                        });
+            }
+            else{
+                $tr.fadeOut('slow')
+                        .then(function(){
+                           $tr.remove(); 
+                });
+            }
         });
         $parentEl.on('click.model', '.add-pn', function () {
             $parentEl.find('#pn')
                     .append('<tr><td></td>\
                             <td class="pn addition">\
                              <input data-id-pn="0"  type="text" class="value form-control">\
-                             <span class="glyphicon glyphicon-remove small remove-pn"></span>\
+                             <span class="glyphicon glyphicon-remove small remove-pn-db"></span>\
                             </td></tr>');
         });
-        $parentEl.on('click.model', '.remove-image', function () {
-            $parentEl
-                    .find('#imgField')
-                    .attr('data-icon', '')
-                    .html('<div class="fileUpload btn btn-primary">\
+        $parentEl.on('click.model', '.remove-form-image', function () {
+            var $img = $parentEl.find('#imgField img'),
+                    path = $img.attr('src').split('/'),
+                    iconName = path[path.length - 1]; 
+            if (idModel) {
+                $.confirm('<center>Do you really want to remove image ?</center>')
+                        .then(function () {
+                            return  updateValue(param.table, 'icon_name', '', 'id_model', idModel);
+                        })
+                        .then(function () {
+                            if (getValue(param.table, 'icon_name', 'icon_name', iconName) === '0') {
+                                alert(iconName);
+                                $img.fileManage('delete');
+                            }
+                            $parentEl
+                                    .find('#imgField')
+                                    .attr('data-icon', '')
+                                    .html('<div class="fileUpload btn btn-primary">\
                                 <span>Upload</span>\
                                 <input type="file" class="upload-img" accept="image/*" />\
                            </div>');
+                        });
+            } else {
+                $parentEl
+                        .find('#imgField')
+                        .attr('data-icon', '')
+                        .html('<div class="fileUpload btn btn-primary">\
+                                <span>Upload</span>\
+                                <input type="file" class="upload-img" accept="image/*" />\
+                           </div>');
+            }     
         });
         $parentEl.on('click.model', 'input.upload-img', function () {
             var uploadDir = '/icon/';
@@ -2735,9 +2907,10 @@ var ModelForm = function (type) {
                 $parentEl.find('#imgField')
                         .attr('data-icon', fileName)
                         .html('\
-                                    <button type="button" class="close remove-image"><span aria-hidden="true">&times;</span></button>\
+                                    <button type="button" class="close remove-form-image"><span aria-hidden="true">&times;</span></button>\
                                     <img src="' + uploadDir + fileName + '"/>\
                                ');
+                
             });
 
         });
@@ -2802,16 +2975,17 @@ var ModelForm = function (type) {
                 if (action === 'update') {
                     updateValueList(param.table, {model: name, icon_name: iconName, id_device_type: idType, model_comment: comment}, 'id_model', idModel)
                             .then(function () {
+                                /*Part number update*/
                                 $parentEl.find('.pn input')
                                         .each(function () {
                                             var idPn = $(this).data('idPn'),
                                                     pnName = $(this).val().trim();
                                             /*update exist part number*/
-                                            if (idPn !== 0) {
+                                            if (idPn !== 0 && pnName !=0 ) {
                                                 updateValueList(param.pnTable, {pn_name: pnName}, param.idPnField, idPn);
                                             }
                                             /*add new part number for this model*/
-                                            else if (pnName !== '') {
+                                            else if (pnName !== '' && pnName !=0) {
                                                 insertValueList(param.pnTable, {pn_name: pnName, id_model: idModel});
                                             }
                                         });
@@ -2849,9 +3023,9 @@ var ModelForm = function (type) {
                                 }
                         );
                     }
-                    for (var pnName in pnNames) {
+                    pnNames.forEach(function(pnName){
                         insertValueList(param.pnTable, {pn_name: pnName, id_model: idModel});
-                    }
+                    });
                 }
                 dfd.resolve(idModel);
             }
@@ -3227,13 +3401,13 @@ var modelDescription = function ($parentEl, type, modelName, callback) {
     return dfd.promise();
 };
 
-var addDeviceEvent = function(id,event){
-    return insertValueList('device_history',{event:event,id_device:id});
+var addDeviceEvent = function (id, event) {
+    return insertValueList('device_history', {event: event, id_device: id});
 };
-var addModuleEvent = function(id,event){
-    return insertValueList('module_history',{event:event,id_module:id});
+var addModuleEvent = function (id, event) {
+    return insertValueList('module_history', {event: event, id_module: id});
 };
-var historyEvents = function ($parentEl,type,id,callback) {
+var historyEvents = function ($parentEl, type, id, callback) {
     var dfd = jQuery.Deferred();
     $.get('/get_history',
             {type: type, id: id},
@@ -3413,7 +3587,7 @@ jQuery.alert = function (dialog, callback) {
     $('#alertWindow .modal-body').html(dialog.replace(/\n/, "<br />"));
     $('#alertWindow.modal').modal();
     $('#alertWindow .ok').off('click');
-    $('#alertWindow .ok').on('click', function () {       
+    $('#alertWindow .ok').on('click', function () {
         $('#alertWindow').off('hidden.bs.modal');
         $('#alertWindow').on('hidden.bs.modal', function (e) {
             if (typeof callback !== 'undefined') {
@@ -3423,7 +3597,7 @@ jQuery.alert = function (dialog, callback) {
             deferred.resolve();
             $('#alertWindow').remove();
         });
-        $(this).modal('hide');      
+        $(this).modal('hide');
     });
     return  deferred.promise();
 };
@@ -3454,10 +3628,91 @@ jQuery.alert = function (dialog, callback) {
             }
             // shake it
             for (var x = 1; x <= settings.shakes; x++) {
-                $this.animate({ left: settings.distance * -1 }, (settings.duration / settings.shakes) / 4)
-                    .animate({ left: settings.distance }, (settings.duration / settings.shakes) / 2)
-                    .animate({ left: 0 }, (settings.duration / settings.shakes) / 4);
+                $this.animate({left: settings.distance * -1}, (settings.duration / settings.shakes) / 4)
+                        .animate({left: settings.distance}, (settings.duration / settings.shakes) / 2)
+                        .animate({left: 0}, (settings.duration / settings.shakes) / 4);
             }
         });
     };
 }(jQuery));
+/******************************************************************************/
+/***************** Image upload plugin ******************************************/
+/******************************************************************************/
+(function ($) {
+    var defaults = {};
+    var methods = {
+        init: function (params) {
+            return this;
+        },
+//upload file
+        upload: function (path, callback) {
+            var files;
+            var el = this;
+            $(this).change(function () {
+                files = this.files;
+                var data = new FormData();
+                $.each(files, function (key, value) {
+                    data.append(key, value);
+                });
+                $.ajax({
+                    url: '/utils/upload_file.php?uploadfiles=1&path=' + path,
+                    type: 'POST',
+                    data: data,
+                    cache: false,
+                    dataType: 'json',
+                    processData: false, // Don't process the files
+                    contentType: false, //String  query
+                    success: function (respond, textStatus, jqXHR) {
+                        if (typeof respond.error === 'undefined') {
+                            if (typeof callback !== 'undefined') {
+                                callback(el, respond.files[0]);
+                            }
+                        }
+                        else {
+                            console.log('Response Error: ' + respond.error);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(' AJAX error: ' + textStatus + ',  ' + errorThrown);
+                    }
+                });
+            });
+            return this;
+        },
+        delete: function (callback) {
+            var $img = $(this),
+                    path = $img.attr('src');
+            $.post(
+                    "/utils/upload_file.php",
+                    {
+                        delete_file: '1',
+                        path: path
+                    },
+            function (status) {
+                if (status.trim() !== '0') {
+                    $img.slideUp();
+                    if(typeof callback !=='undefined'){
+                        callback();
+                    }
+                }
+                else {
+                    console.log('Response Error: '+status);
+                }
+            });
+            return this;
+        },
+        download: function () {
+            return this;
+        }
+    };
+    $.fn.fileManage = function (method) {
+        if (methods[method]) {
+            return methods[ method ].apply(this, Array.prototype.slice.call(
+                    arguments, 1));
+        } else if (typeof method === 'object' || !method) {
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error('Method "' + method + '"id not found into plugin ');
+        }
+    };
+})(jQuery);
