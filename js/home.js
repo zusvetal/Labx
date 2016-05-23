@@ -1284,7 +1284,7 @@ var getMainInfo = function ($parentEl, type, id) {
         var $btn = $(this),
                 $content = $parentEl.find('.section-content'),
                 $header = $parentEl.find('.section-header'),
-                text = $content.summernote('code');
+                text = $content.summernote('isEmpty') ?  '' : $content.summernote('code');
         updateValue(param.table, 'comment', text, param.idField, id, function (data) {
             $content.summernote('destroy');
             $header
@@ -1867,7 +1867,8 @@ var Form = function (type, callback) {
                     idModel = modelList.getElementId(),
                     idTeam = teamList.getElementId(),
                     idPn = pnList.getElementId(),
-                    comment = $parentEl.find('#comment').summernote('code'),
+                    comment = $parentEl.find('#comment').summernote('isEmpty')?'':
+                            $parentEl.find('#comment').summernote('code'),
                     idGlobalLocation=getIdGlobalLocation(),
                     item,
                     value,
@@ -2942,11 +2943,14 @@ var ModelForm = function (type) {
         $parentEl.on('click.model', 'button.submit-model', function (e) {
             var name = $parentEl.find('#name input').val().trim(),
                     idType = typeList.getElementId(),
-                    comment = $parentEl.find('#comment').summernote('code'),
+
                     iconName = $parentEl.find('#imgField').data('icon'),
                     size_pattern = /^\d+$/,
                     permission = true,
-                    pnNames = [];
+                    pnNames = [],
+                    comment = $parentEl.find('#comment').summernote('isEmpty') ?
+                        '' :
+                        $parentEl.find('#comment').summernote('code');
             if (type === 'device') {
                 var idFormFactor = $parentEl.find('#formFactor select').val(),
                         size = $parentEl.find('#size input').val().trim();
@@ -3103,11 +3107,13 @@ var VMForm = function (idInterface) {
                 dfd = jQuery.Deferred();
         $parentEl.on('click.vm', 'button.submit-vm', function (e) {
             var $ipInput = $parentEl.find('[name="virt_ip"]'),
-                    comment = $parentEl.find('#comment').summernote('code'),
                     ip = $ipInput.val(),
                     host = $parentEl.find('[name="virt_host"]').val(),
                     os = $parentEl.find('[name="os"]').val(),
-                    valid = true;
+                    valid = true,
+                    comment = $parentEl.find('#comment').summernote('isEmpty') ?
+                        '' :
+                        $parentEl.find('#comment').summernote('code');
             /*ip field validation*/
             if (ip !== '' && ip !== '0.0.0.0') {
                 if (!ipPattern.test(ip)) {

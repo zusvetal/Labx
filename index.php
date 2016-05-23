@@ -89,16 +89,18 @@ $app->get('/', function ($request, $response, $args) {
 });
 
 $app->get('/hkv', function ($request, $response, $args) {
-//    $_SESSION['id_global_location'] = '1'; //HKV
     return $response->withHeader('location', '/hkv/stock/devices');
 });
 
 $app->get('/hvs', function ($request, $response, $args) {
-//    $_SESSION['id_global_location'] = '2'; //HVS
-    header('Location:/hvs/stock/devices');
-
-    return $response;
+     return $response->withHeader('location', '/hvs/stock/devices');
 });
+
+$app->get('/tvn', function ($request, $response, $args) {
+    return $response->withHeader('location', '/tvn/stock/devices');
+});
+
+
 $app->get('/{global}/lab/{id_lab}', function ($request, $response, $args) {
     $id_lab = $args['id_lab'];
     include 'racks.php';

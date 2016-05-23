@@ -342,7 +342,7 @@ $('#menuField').on('click', '.transfer-status', function () {
        search();
     }
     else {
-        $('#keyList').append('<a  class="btn a-btn key single" data-key="id_transfer_status">Transfer</a>');
+        $('#keyList').append('<button  class="btn a-btn key single" data-key="id_transfer_status">Transfer</button>');
         showTransferStatus();
     }
 
@@ -379,7 +379,7 @@ var workingStatus = function ($btn) {
     }
     else {
         $btn.addClass('active');
-        $('#keyList').append('<a  class="btn a-btn key single" data-key="id_work_status">Operability</a>');
+        $('#keyList').append('<button  class="btn a-btn key single" data-key="id_work_status">Operability</button>');
         showWorkStatus();
     }
 };
