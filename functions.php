@@ -22,7 +22,7 @@ function get_port_links($id_device_in_rack, $id_port_set) {
         }
         #add links from modules in chassis(device)           
         if ($id_device) {
-            $modules = get_module_list($id_device);
+            $modules = get_module_list(['id_device'=>$id_device]);
             if ($modules) {
                 foreach ($modules as $id_module => $module) {
                     $module_port_list = get_port_list($module['id_port_set']);
@@ -124,7 +124,7 @@ function get_devices($device_list) {
         foreach ($device_list as $id_device => $device) {
             $interfaces = get_interface_list($id_device);
             $int2 = $interfaces;
-            $device_list[$id_device]['modules'] = get_module_list($id_device);
+            $device_list[$id_device]['modules'] = get_module_list(['id_device'=>$id_device]);
             $device_list[$id_device]['employee_name'] = get_value('staff', 'employee_name', 'id_employee', $device['id_owner']);
             $device_list[$id_device]['team_name'] = get_value('team', 'team_name', 'id_team', $device['id_team']);
             $device_list[$id_device]['interfaces'] = get_interfaces($id_device);

@@ -105,6 +105,14 @@ function get_values($table,$where_col, $where_value) {
     }
     return !empty($value) ? $value : false;
 }
+function get_values_full($table,$where_col, $where_value) {
+    $result = mysqli_query(db::$link, "SELECT * FROM $table WHERE `$where_col`='$where_value'")
+            or die("Invalid query: " . mysqli_error(db::$link));
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $value[]= $row;
+    }
+    return !empty($value) ? $value : false;
+}
 function get_value_full_list($table, $where_col, $where_value) {
     $result = mysqli_query(db::$link, "SELECT * FROM $table WHERE `$where_col`='$where_value'")
             or die("Invalid query: " . mysqli_error(db::$link));
@@ -289,76 +297,7 @@ function get_device_list($model = false) {
     }
     return !empty($device_list) ? $device_list : false;
 }
-function get_free_device_list($model) {
-    $query = "SELECT
-            id_device,
-            id_location,
-            device_list.id_model,
-            id_owner,
-            employee_name,
-            model,
-            sn,
-            asset_harmonic,
-            asset_gl,
-            device_list.id_global_location
-	FROM 
-            staff
-	RIGHT JOIN
-            device_list
-        ON
-            staff.id_employee=device_list.id_owner
-        NATURAL JOIN
-             device_model			
-        WHERE
-            model='$model'
-        AND 
-            id_location='4'
-        AND 
-            device_list.id_global_location=".$_SESSION['id_global_location']."
-	";
-    $result = mysqli_query(db::$link, $query)
-            or die("Invalid query: " . mysqli_error(db::$link));
-
-    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-        $device_list[$row['id_device']] = $row;
-    }
-    return !empty($device_list) ? $device_list : false;
-}
-function get_free_module_list() {
-    $query = "SELECT
-            id_module,
-            id_device,
-            employee_name,
-            module_list.id_model,
-            model,
-            sn,
-            asset_harmonic,
-            asset_gl,
-            id_owner,
-            module_list.id_global_location,
-            module_list.id_team
-	FROM 
-            staff
-        RIGHT JOIN
-           module_list
-        ON
-            staff.id_employee=module_list.id_owner
-        NATURAL JOIN        
-           module_model
-        WHERE
-            module_list.id_device='0'
-        AND
-            module_list.id_global_location=".$_SESSION['id_global_location']."
-	";
-
-    $result = mysqli_query(db::$link, $query)
-            or die("Invalid query: " . mysqli_error(db::$link));
-    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-        $module_list[$row['id_module']] = $row;
-    }
-    return !empty($module_list) ? $module_list : false;
-}
-function get_module_list($id_device = false) {
+function get_module_list($keys = false) {
     $query = "SELECT
             id_module,
             id_device,
@@ -390,8 +329,10 @@ function get_module_list($id_device = false) {
         WHERE
             id_global_location=".$_SESSION['id_global_location']."
 	";
-    if ($id_device!==false) {
-        $query .= " AND id_device='$id_device'";
+    if ($keys!==false) {
+      foreach ($keys as $key => $value) {
+            $query.="AND `$key`='$value'";
+      }
     }
     $query.=" ORDER BY id_module DESC ";
     $result = mysqli_query(db::$link, $query)
@@ -416,7 +357,8 @@ function get_module($id_module) {
             id_global_location,
             id_team,
             module_model.id_device_type,
-            device_type.name AS type
+            device_type.name AS type,
+            pn_name AS pn
 	FROM 
            module_list
         NATURAL JOIN   
@@ -425,6 +367,10 @@ function get_module($id_module) {
            device_type
         ON
             device_type.id_device_type=module_model.id_device_type
+        LEFT JOIN 
+           module_pn
+        ON
+            module_pn.id_module_pn=module_list.id_module_pn
         WHERE
             module_list.id_module=$id_module
 	";
@@ -799,25 +745,6 @@ function get_module_model_list() {
     }
     return $models;
 }
-
-/*
-  function get_models_in_rack($id_rack) {
-  $result = mysqli_query(db::$link, "SELECT id_model,model
-  FROM
-  devices_in_rack,device_model
-  WHERE
-  devices_in_rack.id_model=device_model.id_model
-  ")
-  or die("Invalid query: " . mysqli_error(db::$link));
-  if ($result->num_rows != 0) {
-  while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-  $models[$row['id_model']] = $row['model'];
-  }
-  return $models;
-  }
-  return false;
-  }
- */
 function get_device_port_list_in_rack($id_rack) {
     $result = mysqli_query(db::$link, "SELECT port_list.id_port,port_list.name
                FROM 
@@ -1057,6 +984,19 @@ function get_search_device($keys=false) {
         $query .= " AND id_transfer_status !=0 ";
         unset($keys['id_transfer_status']);
     }
+    if (isset($keys['id_location'])&&$keys['id_location']==='0') {
+        $query .= " AND device_list.id_location !=0 ";
+        unset($keys['id_location']);
+    }
+    
+    if (isset($keys['id_device_type'])&&$keys['id_device_type']==='0') {
+        $query .= " AND device_model.id_device_type !=0 ";
+        unset($keys['id_device_type']);
+    }
+    if (isset($keys['id_device_type'])){
+        $query .= " AND device_model.id_device_type= ".$keys['id_device_type']." ";
+        unset($keys['id_device_type']);
+    }
     if ($keys) {
         foreach ($keys as $key => $value) {
             $query.="AND `$key` LIKE '%$value%'";
@@ -1174,12 +1114,16 @@ function get_search_module($keys=false) {
         unset($keys['id_work_status']);
     }
     if (isset($keys['id_device_type'])&&$keys['id_device_type']==='0') {
-        $query .= " AND id_device_type !=0 ";
+        $query .= " AND module_model.id_device_type !=0 ";
         unset($keys['id_device_type']);
     }
     if (isset($keys['id_device_type'])){
-        $query .= " AND id_device_type= ".$keys['id_device_type']." ";
+        $query .= " AND module_model.id_device_type= ".$keys['id_device_type']." ";
         unset($keys['id_device_type']);
+    }
+    if (isset($keys['id_device'])){
+        $query .= " AND id_device= ".$keys['id_device']." ";
+        unset($keys['id_device']);
     }
     if ($keys) {
         foreach ($keys as $key => $value) {
@@ -1191,10 +1135,10 @@ function get_search_module($keys=false) {
             or die("Invalid query: " . mysqli_error(db::$link));
     if ($result->num_rows != 0) {
         while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-            $device[$row['id_module']] = $row;
+            $module[$row['id_module']] = $row;
         }
         
-        return $device;
+        return $module;
     }
     
     return false;

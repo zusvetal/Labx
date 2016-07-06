@@ -574,16 +574,15 @@ $('#content').on('click', 'span.info', function () {
             .then(function () {
                 return generalDeviceInfoTable($('#generalInfo'), idDevice);
             })
-            .then(function () {
+            .then(function (data) {
                 return deviceModuleTable($('#deviceCards'), idDevice);
             })
             .then(function (data) {
-                console.log(data);
             });
 });
 
 /******************************************************************************/
-/************************* booking device  ******** ********************/
+/************************* booking device  ************************************/
 /******************************************************************************/
 
 $('#content').on('click', 'span.free', function () {
@@ -663,7 +662,7 @@ $('.virt-host').on('shown.bs.popover', function (e) {
 
 });
 /******************************************************************************/
-/****************************initial settings *********************************/
+/**************************** initial settings ********************************/
 /******************************************************************************/
 
 

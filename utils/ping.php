@@ -3,7 +3,7 @@
 $ip=$_POST['ip'];
 
 function ping($ip) { 
-exec("ping -c 1 -w 1.2  $ip",$output,$status); 
+exec("ping -c 1 -w 5  $ip",$output,$status); 
 return $status;  
 }
 

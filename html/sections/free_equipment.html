@@ -7,6 +7,7 @@
         <th>S/N</th>
         <th>P/N</th>
         <th>Owner</th>
+        <th>Team</th>
     </tr>
     <?php foreach( $equipment_list as $id => $element):?> 
     <tr  data-id-element="<?=$id?>">
@@ -16,6 +17,7 @@
         <td  data-item="sn"><?=$element['sn']?> </td>
         <td  data-item="pn"><?=$element['pn']?> </td>
         <td  data-item="owner"><?=$element['employee_name']?> </td>
+        <td  data-item="owner"><?=$element['team_name']?> </td>
     </tr>
     <?php endforeach; ?>
 </table>

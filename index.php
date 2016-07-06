@@ -2,7 +2,15 @@
 
 require 'vendor/autoload.php';
 // Create and configure Slim app
-$app = new \Slim\App;
+$app = new \Slim\App([
+'settings' => [
+// Slim Settings
+        'determineRouteBeforeAppMiddleware' => true,
+        'displayErrorDetails' => true,
+        'addContentLengthHeader' => false,
+        ]
+]);
+
 
 
 //Middleware - Authorization and set initial configuration 

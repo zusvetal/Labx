@@ -47,9 +47,11 @@
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Location<span class="caret"></span></a> 
                                 <ul class="dropdown-menu" role="menu">
                                     <li ><a href="/labdesks">Labdesks</a></li>
+                                    <?php if(!empty($_SESSION['lab_list'])):?>
                                     <?php foreach( $_SESSION['lab_list'] as $id_lab => $lab):?>
                                         <li><a href="/lab/<?=$id_lab?>"><?=$lab['lab_name']?></a></li>
                                     <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </ul>
                             </li>
 <!--                            <li ><a href="/racks">Racks</a></li>-->                           

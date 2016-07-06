@@ -66,4 +66,13 @@ $app->get('/get_history', function ($request, $response, $args) {
     include 'html/sections/event_history.html';
 });
 
+$app->get('/get_module_by_sn', function ($request, $response, $args) {
+    $sn = $request->getQueryParams()['sn'];
+    $modules=  get_module_list(['sn'=>$sn]);
+    echo json_encode($modules);
+    exit();
+//    $response = $response->getBody()->write(json_encode($modules));
+//    
+//    return $response;
+});
 ?>

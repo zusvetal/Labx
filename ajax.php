@@ -55,10 +55,10 @@ if (isset($_POST['get_modal_window'])) {
 if (isset($_POST['get_free_equipment'])) {
     $type = $_POST['type'];
     if ($type === 'module') {
-        $equipment_list = get_free_module_list();
+        $equipment_list = get_search_module(['id_device'=>'0']);
     } elseif ($type === 'device') {
         $model = $_POST['model'];
-        $equipment_list = get_free_device_list($model);
+        $equipment_list = get_search_device(['model'=>$model,'id_location'=>'4']);
     }
     include 'html/sections/free_equipment.html';
 }
@@ -227,7 +227,7 @@ if (isset($_POST['get_interface_list'])) {
     echo $interface_list ? json_encode($interface_list) : '0';
 }
 if (isset($_POST['get_modules_info'])) {
-    $module_list = get_module_list($_POST['id_device']);
+    $module_list = get_module_list(['id_device'=>$_POST['id_device']]);
     echo json_encode($module_list);
 }
 if (isset($_POST['get_model_descr'])) {

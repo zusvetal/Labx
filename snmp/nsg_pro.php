@@ -28,7 +28,7 @@ function get_modules_info($ip){
                 'pn' => $oid.$pn.$index
             ));
             if (preg_match('/RfModule/i', $c['name'])) {
-                $c['name'] = 'DLC-01-01';
+                $c['name'] = 'NSG PRO DLC-01-01';
             }
             $modules[] = $c;
         }

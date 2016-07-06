@@ -170,7 +170,7 @@ var getModuleRow = function (idModule) {
 };
 
 /*Open modal window*/
-$('#content').on('click.devices', 'span.add-module', function (event) {
+$('#content').on('click.devices', 'span.insert-module', function (event) {
     var $tr = $(this).closest('tr'),
             idDevice = $tr.data('idDevice'),
             modal = new Modal(),
@@ -193,6 +193,7 @@ $('#content').on('click.devices', 'span.add-module', function (event) {
             })
             .then(function (idModule) {
                 modal.hide();
+                getDeviceInfo(idDevice).then(function(d){addModuleEvent(idModule,'Bind with device <b>'+d['model']+', sn - '+d['sn']+'</b> manually')})
                 return getModuleRow(idModule);
             })
             .then(function (row) {
@@ -225,6 +226,7 @@ $('#content').on('click.devices', 'span.unbind', function () {
                     $deviceTr.removeClass('choose3');
                     $deviceTr.find('.show-modules').remove();
                 }
+                addModuleEvent(idModule,'Change status to "free" manually');
             });
 });
 /******************************************************************************/

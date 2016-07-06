@@ -161,52 +161,44 @@ $('#content').on('click', 'span.warning', function (event) {
 /******************************************************************************/
 $('#content').on('click', 'span.info', function () {
     var idDevice = $(this).data('idDevice'),
-    $tr=$(this).closest('tr'),
-    modal = new Modal(),
-    numOfInterface;
-    
+            $tr = $(this).closest('tr'),
+            modal = new Modal(),
+            modelName = $tr.find('td.model').text(),
+            numOfInterface;
     modal.getModal($('#deviceInformation'))
             .then(function () {
                 /***get device information body***/
                 modal.setWidth('50%');
+                modal.setTitle('<b>' + modelName + '</b>');
                 modal.show();
-                $tr.addClass('info');
-                $('#content').on('hidden.bs.modal', modal.object, function () {
-                    $tr.removeClass('info');
-                });
-                return getMainInfo(modal.getBodyField(),'device', idDevice);
+                modal.addBody('<div id="statusInfo"></div>\
+                               <div id="deviceDescription"></div>\
+                               <div id="modelDescription"></div>\
+                               <div id="generalInfo"></div>\
+                               <div id="deviceCards"></div>\
+                               <div id="historyEvents"></div>\
+                              ')
+                return getMainInfo($('#deviceDescription'), 'device', idDevice);
             })
-            .then(function ($body) {
-                var $intField;
-                $body.append('<div id="intInfo"></div>')
-                        .append('<div id="generalInfo"></div>')
-                        .append('<div id="deviceCards"></div>')
-                        .prepend('<div id="statusInfo"></div>');
-                getInterfaceList(idDevice)
-                        .then(function (interfaces) {
-                            numOfInterface = Object.keys(interfaces).length;
-                            $intField = numOfInterface > 1 ?
-                                    $('#intInfo')
-                                    :
-                                    $('#statusInfo');
-//                            if(numOfInterface>1){
-//                                modal.setWidth('60%'); 
-//                            }
-                            netInterfaceInfo($intField, idDevice);
-                        });
+            .then(function () {
+                return modelDescription($('#modelDescription'), 'device', modelName);
+            })
+            .then(function () {
+                return netInterfaceInfo($('#statusInfo'), idDevice);
+            })
+            .then(function () {
+                return historyEvents($('#historyEvents'), 'device', idDevice);
+            })
+            .then(function () {
                 return generalDeviceInfoTable($('#generalInfo'), idDevice);
             })
-            .then(function ($body) {
+            .then(function (data) {
+                console.log(data);
                 return deviceModuleTable($('#deviceCards'), idDevice);
             })
-            .then(function (table) {
-                console.log(this);
-            }
-            /*,
-                    function (status) {
-                        alert(status);
-                    }*/
-            );
+            .then(function (data) {
+                console.log(data);
+            });
 });
 /******************************************************************************/
 /***************************** Add/update interfaces *********************************/

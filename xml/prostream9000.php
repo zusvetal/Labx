@@ -32,6 +32,9 @@ function get_card_name($pn) {
 
 function get_modules_xml_info($ip, $xml_request) {
     $xml_reply = do_post_request('http://root:HPcinHPs@' . $ip . '/BrowseConfig', $xml_request);
+    if (!$xml_reply) {
+        return false;
+    }
     $xml = simplexml_load_string($xml_reply) or die("Error: Cannot create object");
     $slots = $xml->xpath('//Slot');
 
@@ -53,19 +56,24 @@ function get_modules_xml_info($ip, $xml_request) {
 
 function get_sn($ip, $xml_request) {
     $xml_reply = do_post_request('http://root:HPcinHPs@' . $ip . '/BrowseConfig', $xml_request);
+    if (!$xml_reply) {
+        return false;
+    }
     $xml = simplexml_load_string($xml_reply) or die("Error: Cannot create object");
-    return (string)$xml->xpath('//Platform')[0]->attributes()['ChassisSerialNum'];;
+
+    return (string) $xml->xpath('//Platform')[0]->attributes()['ChassisSerialNum'];
 }
 
 function get_general_info($ip, $xml_request) {
     $xml_reply = do_post_request('http://root:HPcinHPs@' . $ip . '/BrowseConfig', $xml_request);
+    if (!$xml_reply) {
+        return false;
+    }
     $xml = simplexml_load_string($xml_reply) or die("Error: Cannot create object");
-    $info['S/N']=(string)$xml->xpath('//Platform')[0]->attributes()['ChassisSerialNum'];
+    $info['S/N'] = (string) $xml->xpath('//Platform')[0]->attributes()['ChassisSerialNum'];
+
     return $info;
 }
-
-
-
 
 $ip=$_POST['ip'];
 $xml_request = '<AFRICA><Platform ID="1" Action="GET_TREE"/></AFRICA>';
