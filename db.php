@@ -353,12 +353,16 @@ function get_module($id_module) {
             asset_harmonic,
             asset_gl,
             id_owner,
+            id_work_status,
+            id_transfer_status,
             comment,
-            id_global_location,
-            id_team,
+            module_list.id_global_location,
+            team.id_team,
             module_model.id_device_type,
             device_type.name AS type,
-            pn_name AS pn
+            pn_name AS pn,
+            employee_name,
+            team_name
 	FROM 
            module_list
         NATURAL JOIN   
@@ -371,6 +375,14 @@ function get_module($id_module) {
            module_pn
         ON
             module_pn.id_module_pn=module_list.id_module_pn
+        LEFT JOIN 
+           staff
+        ON
+            staff.id_employee=module_list.id_owner
+        LEFT JOIN 
+           team
+        ON
+            team.id_team=module_list.id_team
         WHERE
             module_list.id_module=$id_module
 	";
@@ -392,15 +404,19 @@ function get_device($id_device) {
             asset_harmonic,
             asset_gl,
             id_owner,
+            id_work_status,
+            id_transfer_status,
             icon_name,
             comment,
-            id_team,
-            id_global_location,
+            team.id_team,
+            device_list.id_global_location,
             size_in_unit,
             id_device_type,
             id_formfactor,
             device_type.name AS type,
-            pn_name AS pn
+            pn_name AS pn,
+            employee_name,
+            team_name
 	FROM 
            device_list
         NATURAL JOIN 
@@ -411,6 +427,14 @@ function get_device($id_device) {
            device_pn
         ON
             device_pn.id_device_pn=device_list.id_device_pn
+         LEFT JOIN 
+           staff
+        ON
+            staff.id_employee=device_list.id_owner
+        LEFT JOIN 
+           team
+        ON
+            team.id_team=device_list.id_team
         WHERE
             device_list.id_device=$id_device
 	";

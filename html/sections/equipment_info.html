@@ -3,28 +3,45 @@
         <img class="device-img" src="/icon/<?=$info['icon_name']?>">
     </div>
 <?php endif;?>
-<table class=" table table-bordered">
-    <tr>
-        <td>S/N</td>
-        <td data-item="sn"> <?=$info['sn']?></td>
-    </tr>
-    <tr>
-        <td>Harmonic barcode</td>
-        <td data-item="asset_harmonic"> <?=$info['asset_harmonic']?></td>
-    </tr>
-<!--    <tr>
-        <td>GL barcode</td>
-        <td data-item="asset_harmonic"> <?=$info['asset_gl']?></td>
-    </tr>-->
-</table>
-<div class="section-header ">
-    <a class=" collapsed" data-toggle="collapse"  href="#deviceDescriptionCollapse" aria-expanded="true" aria-controls="deviceDescriptionCollapse">
-  Device description
-    </a>
-  <span class="glyphicon glyphicon-chevron-down arrow"></span>
-  <span class="glyphicon glyphicon-save save hide" data-toggle="tooltip" data-placement="bottom" title="Save description"></span>
-  <span class="glyphicon glyphicon-edit write" data-toggle="tooltip" data-placement="bottom" title="Edit"></span>
+<div id="mainDescription" class="row">
+    <div  class="col-md-offset-4 col-md-4">
+        <ul class="list-group items">
+            <li class="list-group-item <?php if (empty($info['model'])) echo 'hidden'?>" data-item="model">
+                Model: <b><?=$info['model']?></b>
+            </li>
+            <li class="list-group-item <?php if (empty($info['type'])) echo 'hidden'?>" data-item="type">
+                Type: <b><?=$info['type']?></b>
+            </li>
+            <li class="list-group-item " data-item="sn">
+                S/N: <b><?=$info['sn']?></b>
+            </li>
+            <li class="list-group-item <?php if (empty($info['pn'])) echo 'hidden'?>" data-item="pn">
+                P/N: <b><?=$info['pn']?></b>
+            </li>
+            <li class="list-group-item <?php if (empty($info['asset_harmonic'])) echo 'hidden'?>" data-item="harmonicBarcode">
+                Harmonic barcode: <b><?=$info['asset_harmonic']?></b>
+            </li>
+            <li class="list-group-item <?php if (empty($info['asset_gl'])) echo 'hidden'?>" data-item="glBarcode">
+                GL barcode: <b><?=$info['asset_gl']?></b>
+            </li>
+            <li class="list-group-item <?php if (empty($info['employee_name'])) echo 'hidden'?>" data-item="deviceOwner">
+                Owner: <b><?=$info['employee_name']?></b>
+            </li>
+            <li class="list-group-item <?php if (empty($info['team_name'])) echo 'hidden'?>" data-item="deviceTeam">
+                Team: <b><?=$info['team_name']?></b>
+            </li>
+        </ul> 
+    </div>
+    <?php if($_SESSION['level']=='0'):?>
+        <div class="col-md-1">
+            <span id="editParam" class="glyphicon glyphicon-edit small" data-toggle="tooltip" title="Edit main parametrs"></span>
+        </div>
+    <?php endif;?>
 </div>
-<div id="deviceDescriptionCollapse" class="section-content well collapse in">
-    <p><?=$info['comment']?></p>
+<div class="row">
+    <div id="editInfo" class="col-md-offset-2 col-md-8">
+
+    </div>
 </div>
+
+

@@ -75,4 +75,15 @@ $app->get('/get_module_by_sn', function ($request, $response, $args) {
 //    
 //    return $response;
 });
+
+$app->get('/get_device_descr', function ($request, $response, $args) {
+    $id = $request->getQueryParams()['id'];
+    $type = $request->getQueryParams()['type'];
+    if ($type === 'device') {
+        $info = get_device($id);
+    } elseif ($type=== 'module') {
+        $info = get_module($id);
+    }
+    include 'html/sections/equipment_description.html';
+});
 ?>

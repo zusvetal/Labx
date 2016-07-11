@@ -63,6 +63,46 @@ $('table').on('click', '.remove', function () {
 });
 /*******************************************************/
 
-
-
+//$('table').after('<button id="checkModules" class="btn btn-block btn-success">Checking...</button><br><div id="workField" class="well"><div>');
+//
+//$('#checkModules').on('click', function () {
+//    $.ajaxSetup({
+//        timeout: false
+//    })
+//    getValueList('device_list', 'id_device', 'id_global_location', '1')
+//            .then(function (ids) {
+////                ids = ['342', '343', '344','1000']
+//                for (var i in ids) {
+//                    getDeviceInfo(ids[i])
+//                            .then(function (device) {
+//                                if (device) {
+//                                    var idDevice = device['id_device'];
+//                                    $('#workField').prepend('<div id="' + idDevice + '" class="well">\
+//                                                            <hr>\
+//                                                            <b>' + device['model'] + ', S/N: ' + device['sn'] + '</b>\
+//                                                            <span class="status"></span>\
+//                                                            <div class="notification"></div>\
+//                                                        </div>')
+//                                    return checkDeviceModulesChanges($('#' + idDevice).find('.notification'), idDevice);
+//                                }
+//                                else{
+//                                    
+//                                  return $.Deferred();  
+//                                }                               
+//                            })
+//                            .then(function (data) {
+//                                
+//                                if(data.status){
+//                                    console.log(data.id)
+//                                    $('#' + data.id).find('.status').html('<span class="badge">Checked!</span>')
+//                                }
+//                                else{
+//                                   $('#' + data.id).find('.status').html('<span class="badge">This device doesn`t check</span>') 
+//                                }
+//                                
+//                            })
+//                            
+//                }
+//            })
+//})
 

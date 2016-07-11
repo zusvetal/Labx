@@ -313,48 +313,45 @@ $('#content').on('click.devices', 'span.infoRack', function () {
 
 /*Open modal window and show device information*/
 $('#content').on('click.devices', 'span.info-device', function () {
-    var $tr=$(this).closest('tr'),
-    idDevice = $(this).data('idDevice'),
-    modelName=$tr.find('td.model').text();
+    var $tr = $(this).closest('tr'),
+            idDevice = $(this).data('idDevice'),
+            modelName = $tr.find('td.model').text();
     var modal = new Modal();
+
     modal.getModal($('#deviceInfo'))
             .then(function () {
                 /***get device information body***/
                 modal.setWidth('50%');
-                modal.setTitle('<b>' + modelName + '</b>');
+//                modal.setTitle('<b>' + modelName + '</b>');
                 modal.show();
-                $tr.addClass('info');
-                $('#content').on('hidden.bs.modal', modal.object, function () {
-                    $tr.removeClass('info');
-                });
                 modal.addBody('<div id="statusInfo"></div>\
+                               <div id="mainInfo"></div>\
                                <div id="deviceDescription"></div>\
                                <div id="modelDescription"></div>\
                                <div id="generalInfo"></div>\
                                <div id="deviceCards"></div>\
                                <div id="historyEvents"></div>\
-                              ');
-                return getMainInfo($('#deviceDescription'), 'device', idDevice);
+                              ')
+                return getMainInfo($('#mainInfo'), 'device', idDevice);
+            })
+            .then(function () {
+                return deviceDescription($('#deviceDescription'), 'device', idDevice);
             })
             .then(function () {
                 return modelDescription($('#modelDescription'), 'device', modelName);
             })
             .then(function () {
-                return historyEvents($('#historyEvents'), 'device', idDevice);
+                return netInterfaceInfo($('#statusInfo'), idDevice);
             })
             .then(function () {
-                return netInterfaceInfo($('#statusInfo'), idDevice);
+                return historyEvents($('#historyEvents'), 'device', idDevice);
             })
             .then(function () {
                 return generalDeviceInfoTable($('#generalInfo'), idDevice);
             })
-            .then(function () {
-                return deviceModuleTable($('#deviceCards'), idDevice);
-            })
             .then(function (data) {
-                console.log(data);
+                return deviceModuleTable($('#deviceCards'), idDevice);
             });
-    // $('#content').off('click.devices', 'span.info');
 });
 /******************************************************************************/
 /**************************** transfer device  ********************************/

@@ -55,7 +55,7 @@ $('#content').on('click.modules', '.remove-module', function () {
             });
 });
 /******************************************************************************/
-/****************** edit module over edit-module icon *************************/
+/****************** edit module  **********************************************/
 /******************************************************************************/
 
 $('#content').on('click.modules', 'span.edit-module', function (event) {
@@ -197,12 +197,16 @@ $('#content').on('click.modules', 'span.info-module', function () {
                 modal.setTitle('<b>' + modelName + '</b>');
                 modal.show();
                 modal.addBody('\
-                               <div id="moduleDescription"></div>\
+                               <div id="mainInfo"></div>\
+                               <div id="deviceDescription"></div>\
                                <div id="modelDescription"></div>\
                                <div id="historyEvents"></div>\
                               ')
                 $tr.addClass('info');
-                return getMainInfo($('#moduleDescription'), 'module', idModule);
+                return getMainInfo($('#mainInfo'), 'module', idModule);
+            })
+            .then(function () {
+                return deviceDescription($('#deviceDescription'), 'module', idModule);
             })
             .then(function () {
                 return modelDescription($('#modelDescription'), 'module', modelName);
@@ -309,21 +313,36 @@ $('#content').on('click.modules', 'td.show-device-info', function () {
             modelName = $(this).text();
     modal.getModal($('#deviceInfo'))
             .then(function () {
+                /***get device information body***/
                 modal.setWidth('50%');
                 modal.setTitle('<b>' + modelName + '</b>');
                 modal.show();
-                return getMainInfo(modal.getBodyField(),'device', idDevice);
+                modal.addBody('<div id="statusInfo"></div>\
+                               <div id="mainInfo"></div>\
+                               <div id="deviceDescription"></div>\
+                               <div id="modelDescription"></div>\
+                               <div id="generalInfo"></div>\
+                               <div id="deviceCards"></div>\
+                               <div id="historyEvents"></div>\
+                              ')
+                return getMainInfo($('#mainInfo'), 'device', idDevice);
             })
-            .then(function ($body) {
-                $body.append('<div id="generalInfo"></div>')
-                        .append('<div id="deviceCards"></div>')
-                        .prepend('<div id="statusInfo"></div>');
+            .then(function () {
+                return deviceDescription($('#deviceDescription'), 'device', idDevice);
+            })
+            .then(function () {
+                return modelDescription($('#modelDescription'), 'device', modelName);
+            })
+            .then(function () {
                 return netInterfaceInfo($('#statusInfo'), idDevice);
+            })
+            .then(function () {
+                return historyEvents($('#historyEvents'), 'device', idDevice);
             })
             .then(function () {
                 return generalDeviceInfoTable($('#generalInfo'), idDevice);
             })
-            .then(function ($body) {
+            .then(function (data) {
                 return deviceModuleTable($('#deviceCards'), idDevice);
             });
 });

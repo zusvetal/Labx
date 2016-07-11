@@ -807,6 +807,128 @@ var GettingInfoFromDevice = function (modelName, ip) {
         }).responseText.trim();
     };
 };
+
+
+var getMainInfo = function ($parentEl, type, id) {
+    var param,
+            dfd = jQuery.Deferred();
+    $parentEl.one('click.info', '#editParam', function () {
+        var form = new Form(type);
+        
+        form.getForm($parentEl.find('#editInfo'),{id:id})
+                .then(function () {
+                    $parentEl.find('tr.comment').hide();                   
+                    $parentEl.find('#mainDescription').slideUp();
+                    infoMessage($parentEl.find('#editInfo'),'<center><b>Edit device parametr</b></center>');
+//                    slideToEl($('#modalWindow'), $parentEl.find('#editInfo'));
+                    return form.eventListener();
+                })
+                .then(
+                        function (id) {
+                            getMainInfo($parentEl, type, id);
+                        },
+                        function (id) {
+                            getMainInfo($parentEl, type, id);
+                        }
+                )
+    });
+    $.post(
+            '/ajax',
+            {
+                get_info: type,
+                id: id
+            },
+    function (body) {
+        dfd.resolve($parentEl.html(body));
+    });
+    return dfd.promise();
+};
+var modelDescription = function ($parentEl, type, modelName, callback) {
+    var dfd = jQuery.Deferred();
+    $.post(
+            "/ajax",
+            {
+                get_model_descr: '1',
+                model: modelName,
+                type: type
+            },
+    function (html) {
+        $parentEl.html(html);
+        if ($parentEl.find('.section-content ').html().trim() === '') {
+            $parentEl.empty()
+        }
+        if (typeof callback !== 'undefined') {
+            callback($parentEl);
+        }
+        dfd.resolve();
+    });
+    return dfd.promise();
+};
+var deviceDescription = function ($parentEl, type, id, callback) {
+    var dfd = jQuery.Deferred(),
+            param;
+        if (type === 'device' || this.type === '') {
+        param = {
+            table: 'device_list',
+            type: 'device',
+            idField: 'id_device'
+        };
+    }
+    else if (type === 'module') {
+        param = {
+            table: 'module_list',
+            type: 'module',
+            idField: 'id_module'
+        };
+    }
+    $.get(
+            '/get_device_descr',
+            {
+                id:id,
+                type: type
+            },
+    function (html) {
+        $parentEl.html(html);
+        if ($parentEl.find('.section-content ').html().trim() === '') {
+            $parentEl.empty();
+        }
+        if (typeof callback !== 'undefined') {
+            callback($parentEl);
+        }
+        dfd.resolve($parentEl);
+    });
+    
+     /*comment action*/
+    $parentEl.on('click.descr', '.write', function () {
+        var $content = $parentEl.find('.section-content'),
+                $header = $parentEl.find('.section-header');
+        $(this).addClass('hide');
+        $parentEl.find('.section-header')
+                .find('.save')
+                .removeClass('hide');
+        $content.summernote();
+        $header.find('a').attr('data-toggle', false);
+    });
+    $parentEl.on('click.descr', '.save', function () {
+        var $btn = $(this),
+                $content = $parentEl.find('.section-content'),
+                $header = $parentEl.find('.section-header'),
+                text = $content.summernote('isEmpty') ?  '' : $content.summernote('code');
+        updateValue(param.table, 'comment', text, param.idField, id, function (data) {
+            $content.summernote('destroy');
+            $header
+                    .find('.save')
+                    .addClass('hide');
+            $header
+                    .find('.write')
+                    .removeClass('hide');
+        });
+        $header.find('a').attr('data-toggle', 'collapse');
+    });
+    
+    
+    return dfd.promise();
+};
 var generalDeviceInfoTable = function ($parentEl, idDevice) {
     var dfd = jQuery.Deferred(),
             modelName = getValue('device_model', 'model', 'id_model', getValue('device_list', 'id_model', 'id_device', idDevice)),
@@ -885,6 +1007,241 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
             });
     return dfd.promise();
 };
+
+var DeviceModules=function(idDevice){
+    var getInfoFromDB = function (callback) {
+        return $.post(
+                "/ajax",
+                {
+                    get_modules_info: '1',
+                    id_device: idDevice
+                },
+        callback,
+                "json"
+                );
+    };
+    var getInfoFromDevice = function () {
+        var dfd = $.Deferred(),
+                modelName;
+        getDeviceInfo(idDevice)
+                .then(function (data) {
+                    modelName = data['model'];
+                    return getInterfaceList(idDevice)
+                })
+                .then(function (interfaces) {
+                    var ip, info,
+                            promise = $.when();
+                    for (var id in interfaces) {
+                        ip = interfaces[id]['ip'];
+                        info = new GettingInfoFromDevice(modelName, ip);
+                        if (info.abilityGettingInfo && (ip !== '' && ip !== '0.0.0.0')) {
+                            promise = promise
+                                    .then(function () {
+                                        return ping(ip);
+                                    })
+                                    .then(function (ping) {
+                                        if (!ping) {
+                                            return $.Deferred().reject();
+                                        }
+                                        return info.getModulesInfo();
+                                    })
+                                    .then(
+                                            function (modules) {
+                                                if (modules) {
+                                                    dfd.resolve(modules);
+                                                    return $.Deferred();
+                                                }
+                                                return $.when();
+                                            },
+                                            function () {
+                                                return $.when();
+                                            }
+                                    );
+                        }
+                    }
+                    promise
+                            .then(function () {
+                                dfd.resolve(false);
+                            });
+                });
+        return dfd.promise();
+    }
+    this.get = function () {   
+        var db, device,
+                snFromDB, snFromDevice, pnFromDB, pnFromDevice,existingDeviceInfo,
+                mergeResult = [],
+                dfd=$.Deferred();
+        getInfoFromDB()
+                .then(function (infoFromDB) {
+                    db = infoFromDB;
+                    return getInfoFromDevice();
+                })
+                .then(function (infoFromDevice) {
+                    device=infoFromDevice;
+                    existingDeviceInfo = (device) ? true : false;
+                    for (var idModule in db) {
+                        snFromDB = db[idModule]['sn'].trim();
+                        pnFromDB = (db[idModule]['pn'] !== null) ? db[idModule]['pn'].trim() : '';
+                        db[idModule]['pn'] = pnFromDB;
+                        for (var i in device) {
+                            snFromDevice = device[i]['sn'].trim();
+                            pnFromDevice = device[i]['pn'].trim();
+                            if (snFromDB === snFromDevice) {
+                                db[idModule]['isPnEqual'] = (pnFromDevice === pnFromDB) ? true : false;
+                                db[idModule]['pnFromDevice'] = pnFromDevice;
+                                db[idModule]['status'] = 'fromBothBbAndDevice';
+                                db[idModule]['descr'] = device[i]['descr'];
+                                mergeResult.push(db[idModule]);
+                                delete device[i];
+                                delete db[idModule];
+                                break;
+                            }
+                        }
+                    }
+                    for (var idModule in db) {
+                        db[idModule]['status'] = 'fromDb';
+                        db[idModule]['edit'] = existingDeviceInfo;
+                        mergeResult.push(db[idModule]);
+                    }
+                    for (var i in device) {
+                        device[i]['status'] = 'fromDevice';
+                        mergeResult.push(device[i]);
+                    }
+                    dfd.resolve(mergeResult);
+                });
+                return dfd.promise();
+    };
+    this.changeStatusToFree = function (idModule) {
+        return updateValue('module_list', 'id_device', '0', 'id_module', idModule);
+    };
+    this.insertToDevice = function (idModule) {
+        return updateValue('module_list', 'id_device', idDevice, 'id_module', idModule);
+    }
+    this.checkInStock = function (sn) {
+        sn = sn.trim();
+        return $.ajax({
+            url: '/get_module_by_sn',
+            async: false,
+            type: 'GET',
+            data: {sn: sn},
+            dataType: 'json'}).responseJSON;
+    };
+    this.checkInDevice = function (moduleSn) {
+        var dfd = $.Deferred();
+        getInfoFromDevice(idDevice)
+                .then(function (modules) {
+                    for (var i in modules) {
+                        if (moduleSn.trim() === modules[i]['sn']) {
+                            return getDeviceInfo(idDevice);
+                        }
+                    }
+                    dfd.resolve(false);
+                    return $.Deferred();
+                })
+                .then(function (device) {
+                    dfd.resolve(device);
+                });
+        return dfd.promise();
+    };   
+};
+var checkDeviceModulesChanges = function ($fieldForNotification,idDevice) {
+    var dfd = $.Deferred();
+    var notification=function(text){
+        infoMessage($fieldForNotification,text);
+//       $fieldForNotification.prepend() 
+    };
+    var modules = new DeviceModules(idDevice);
+    modules.get(idDevice)
+            .then(function (data) {
+                if (data.length === 0) {
+                    return dfd.resolve({id:idDevice,status:false});
+                }
+                for (var i in data) {
+                    var module = data[i];
+                    switch (module['status']) {
+                        case 'fromBothBbAndDevice':
+                            break;
+
+                        case 'fromDb':
+                            if (module['edit']) {
+//                                modules.changeStatusToFree(module['id_module']);
+//                                addModuleEvent(module['id_module'], 'Change status to "free"')
+                                notification('Card/module with <b>' + module['sn'] + '</b> is no longer used in the device.<br>\
+                        Unbinding...');
+                            } else {
+                            }
+                            break;
+
+                        case 'fromDevice':
+                            if (module['sn'] !== '') {
+                                var stockModules = modules.checkInStock(module['sn']);
+                                if (stockModules) {
+                                    if (objectLength(stockModules) === 1) {
+                                        for (var idModule in stockModules) {
+                                            var sn = stockModules[idModule]['sn'];
+                                            if (stockModules[idModule]['id_device'] != '0') {
+
+                                                /*Block resolve problem with ascync*/
+                                                (function () {
+                                                    var idModuleI = idModule,
+                                                            moduleI = module,
+                                                            snI = sn,
+                                                            stockModulesI = stockModules;
+                                                    modules.checkInDevice(stockModulesI[idModuleI]['id_device'], snI)
+                                                            .then(function (device) {
+                                                                if (!device) {
+                                                                    if (stockModulesI[idModuleI]['model'] === moduleI['name'].trim()) {
+//                                                            modules.insertToDevice(idModuleI);
+                                                                        notification('Bind card/module with sn <b>' + snI + '</b>');
+//                                                            getDeviceInfo(idDevice).then(function (d) {
+//                                                                addModuleEvent(idModule, 'Bind with device <b>' + d['model'] + ', sn - ' + d['sn'] + '</b>');
+//                                                            });
+                                                                    }
+                                                                    else {
+                                                                        notification('Candidate for binding But have different model name');
+                                                                    }
+                                                                }
+                                                                else {
+                                                                    /*find unknow module cards*/
+                                                                    notification('Card/module with sn <b>' + snI + '</b>\
+                                                           exist and  is located into other device <b>' + device['model'] + '</b>.<br>\
+                                                           Device is located in <b>' + device['descr'] + '</b>');
+                                                                }
+                                                            });
+                                                })();
+                                            }
+                                            else {
+//                                    modules.insertToDevice(idModule, idDevice);
+//                                    getDeviceInfo(idDevice).then(function (d) {
+//                                        addModuleEvent(idModule, 'Bind with device <b>' + d['model'] + ', sn - ' + d['sn'] + '</b>')
+//                                    })
+                                                notification('Bind card/module with sn <b>' + sn + '</b>');
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        notification('Find more than one modules with this Sn');
+                                        
+                                    }
+                                }
+                                else {
+                                    notification('Find new module/card');
+                                }
+                            }
+                            else {
+                                notification('Find new module/card');
+                            }
+                            break;
+                    }
+                }
+                dfd.resolve({id:idDevice,status:true});
+            });
+            return dfd.promise();
+};
+
+ 
+
+
 var deviceModuleTable = function ($parentEl, idDevice) {
         var dfd = jQuery.Deferred(),
             infoFromDevice, infoFromDB,
@@ -1032,7 +1389,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
     }
     
     
-    var pnTd = function (pnFromDevice, pnFromDb) {
+    var addPnTd = function (pnFromDevice, pnFromDb) {
 
         var devicePn = pnFromDevice.trim(),
                 dbPn = pnFromDb.trim(),
@@ -1076,7 +1433,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
         var $tr = '<tr data-id-module="' + module['id_module'] + '">';
         $tr += '<td class="model">' + module['model'] + '</td>';
         $tr += '<td>' + module['sn'] + '</td>';
-        $tr += pnTd(module['pnFromDevice'], module['pn']);
+        $tr += addPnTd(module['pnFromDevice'], module['pn']);
         $tr += '<td>' + module['descr'] + '</td>';
         $tr += '<td class="icon hide-td"><span class="glyphicon glyphicon-info-sign module-info" data-toggle="tooltip" title="show detail information"></span></td>'
         $tr += '</tr>';
@@ -1155,7 +1512,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
     };
     var createTable = function ($parentEl, data) {
         var $table, $tr, sn;
-        $parentEl.html('<table id="modules" class="table table-bordered table-hover"></table>');
+        $parentEl.html('<table id="modules" class="table table-bordered table-responsive table-hover "></table>');
         $table = $parentEl.find('#modules');
         if (data.length === 0) {
             return false;
@@ -1237,11 +1594,11 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                         else {
                             addTrWithUnknowModule(module);
                         }
-                        break;
                     }
                     else {
                         addTrWithUnknowModule(module);
                     }
+                    break;
             }
         }
         return true;
@@ -1307,6 +1664,10 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                             <div class="row">\
                                 <div id="moduleInfoPanel" class="col-md-offset-2  col-md-8">\
                                     <button type="button" class="close-module-info-panel close"><span>&times;</span></button>\
+                                    <br>\
+                                    <div class="alert alert-info"><center><b> Information panel for card/module</b></center></div>\
+                                    <div class="title"></div>\
+                                    <div id="moduleInfo"></div>\
                                     <div id="moduleDescr"></div>\
                                     <div id="modelDescr"></div>\
                                     <div id="historyModuleEvents"></div>\
@@ -1320,7 +1681,10 @@ var deviceModuleTable = function ($parentEl, idDevice) {
         $body.css({border:'solid 1px #ccc',padding:'10px'});
         
         $tr.addClass('info');
-        getMainInfo($parentEl.find('#moduleDescr'), 'module', idModule)
+        getMainInfo($parentEl.find('#moduleInfo'), 'module', idModule)
+                .then(function () {
+                    return deviceDescription($parentEl.find('#moduleDescr'), 'module', idModule);
+                })
                 .then(function () {
                     return modelDescription($parentEl.find('#modelDescr'), 'module', modelName);
                 })
@@ -1489,63 +1853,6 @@ var netInterfaceInfo = function ($parentEl, idDevice) {
                 .then(function () {
                     $descrField.html(text);
                 });
-    });
-    return dfd.promise();
-};
-var getMainInfo = function ($parentEl, type, id) {
-    var param,
-            dfd = jQuery.Deferred();
-    if (type === 'device' || this.type === '') {
-        param = {
-            table: 'device_list',
-            type: 'device',
-            idField: 'id_device'
-        };
-    }
-    else if (type === 'module') {
-        param = {
-            table: 'module_list',
-            type: 'module',
-            idField: 'id_module'
-        };
-    }
-    /*comment action*/
-    $parentEl.on('click.info', '.write', function () {
-        var $content = $parentEl.find('.section-content'),
-                $header = $parentEl.find('.section-header');
-        $(this).addClass('hide');
-        $parentEl.find('.section-header')
-                .find('.save')
-                .removeClass('hide');
-        console.log($parentEl, $content)
-        $content.summernote();
-        $header.find('a').attr('data-toggle', false);
-    });
-
-    $parentEl.on('click.info', '.save', function () {
-        var $btn = $(this),
-                $content = $parentEl.find('.section-content'),
-                $header = $parentEl.find('.section-header'),
-                text = $content.summernote('isEmpty') ?  '' : $content.summernote('code');
-        updateValue(param.table, 'comment', text, param.idField, id, function (data) {
-            $content.summernote('destroy');
-            $header
-                    .find('.save')
-                    .addClass('hide');
-            $header
-                    .find('.write')
-                    .removeClass('hide');
-        });
-        $header.find('a').attr('data-toggle', 'collapse');
-    });
-    $.post(
-            "/ajax",
-            {
-                get_info: type,
-                id: id
-            },
-    function (body) {
-        dfd.resolve($parentEl.html(body));
     });
     return dfd.promise();
 };
@@ -2237,6 +2544,7 @@ var Form = function (type, callback) {
         $parentEl.on('click.form', '#closeForm', function () {
             $(this).closest('#addForm').remove();
             $parentEl.off('.form', '**');
+            dfd.reject(idElement);
         });
         modelList.changeElement(function (event, idModel) {
             pnList.destroyEvents();
@@ -3627,27 +3935,7 @@ var getWorkStatus = function ($parentEl, callback) {
     });
     return dfd.promise();
 };
-var modelDescription = function ($parentEl, type, modelName, callback) {
-    var dfd = jQuery.Deferred();
-    $.post(
-            "/ajax",
-            {
-                get_model_descr: '1',
-                model: modelName,
-                type: type
-            },
-    function (html) {
-        $parentEl.html(html);
-        if ($parentEl.find('#modelDescriptionCollapse').html().trim() === '') {
-            $parentEl.empty()
-        }
-        if (typeof callback !== 'undefined') {
-            callback($parentEl);
-        }
-        dfd.resolve();
-    });
-    return dfd.promise();
-};
+
 
 var addDeviceEvent = function (id, event) {
     return insertValueList('device_history', {event: event, id_device: id});
