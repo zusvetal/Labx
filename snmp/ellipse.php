@@ -1,13 +1,6 @@
 <?php
+include_once 'function.php';
 $ip=$_POST['ip'];
-function get_oid($ip, $mip_array) {
-    foreach ($mip_array as $name => $oid) {
-        $snmp_result = @snmpget($ip, "public", $oid);
-        $value=!stristr($snmp_result,':') ? '' : str_replace("\"","", explode(":", $snmp_result)[1]);
-        $result[$name] = $value;
-    }
-    return $result;
-}
 
 function get_modules_info($ip){
     $desc='2';
@@ -15,8 +8,12 @@ function get_modules_info($ip){
     $name='7';
     $sn='11';
     $oid='1.3.6.1.2.1.47.1.1.1.1.';
-    $a=snmprealwalk($ip, 'public', $oid.$module);
-    foreach ($a as $key => $value) {
+    $snmp_data=@snmprealwalk($ip, 'public', $oid.$module,3000, 2);
+    if(!$snmp_data){
+        
+        return FALSE;
+    }
+    foreach ($snmp_data as $key => $value) {
         if($value=='INTEGER: 9'){
             $b=explode('.', $key);
             $index='.'.end($b);
@@ -27,6 +24,7 @@ function get_modules_info($ip){
             ));
         }
     }
+    
 return $modules;
 }
 

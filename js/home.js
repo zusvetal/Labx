@@ -931,7 +931,7 @@ var deviceDescription = function ($parentEl, type, id, callback) {
 };
 var generalDeviceInfoTable = function ($parentEl, idDevice) {
     var dfd = jQuery.Deferred(),
-            modelName = getValue('device_model', 'model', 'id_model', getValue('device_list', 'id_model', 'id_device', idDevice)),
+            modelName, //= getValue('device_model', 'model', 'id_model', getValue('device_list', 'id_model', 'id_device', idDevice)),
         ip, info, sn, access,
         body='<div class="section-header">\
                     <a class=" collapsed" data-toggle="collapse"  href="#genInfoCollaps" aria-expanded="true" aria-controls="genInfoCollapse">\
@@ -942,68 +942,76 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
                 <div id="genInfoCollaps"" class="section-content collapse in">\
                    <div class="loading"></div>\
                 </div>';
-    getInterfaceList(idDevice)
-            .then(function (interfaces) {
-                //console.log(interfaces);
-                if (interfaces) {
-                    for (var id in interfaces) {
-                        ip = interfaces[id]['ip'];
+    var checkInfoFromInterface = function (ipDevice, infoDevice,promise) {
+        promise = promise
+                .then(function () {
+                    return ping(ipDevice);
+                })
+                .then(function (ping) {
+                    if (!ping) {
+                        return $.Deferred().reject();
                     }
+                    return infoDevice.general();
+                })
+                .then(
+                        function (generalInfo) {
+                            if (generalInfo) {
+                                sn = generalInfo['S/N'];
+                                $parentEl.find('.section-content')
+                                        .html(createTable('deviceInfoTable', generalInfo));
+                                /*check S/N into database*/
+                                return getValueAsync('device_list', 'sn', 'id_device', idDevice);
+                            }
+                            else {
+                                return $.Deferred().reject();
+                            }
+                        },
+                        function () {
+                            return $.Deferred().reject();
+                        }
+                )
+                .then(
+                        function (dbSn) {
+                            console.log(dbSn);
+                            if (!dbSn && access) {
+                                updateValue('device_list', 'sn', sn, 'id_device', idDevice);
+                                $parentEl.prepend('<div class="info-message"></div>');
+                                infoMessage($parentEl.find('.info-message'),
+                                        'Serial number ' + sn + ' add to database'
+                                        );
+
+                            }
+                            dfd.resolve($parentEl);
+                            return $.Deferred();
+                        },
+                        function () {
+                            return $.when();
+                        }
+                )
+        return promise;
+    }
+    $parentEl.html(body);
+    $.loading($parentEl.find('.loading'));
+    getDeviceInfo(idDevice)
+            .then(function (data) {
+                modelName = data['model'];
+                return getInterfaceList(idDevice);
+            })
+            .then(function (interfaces) {
+                var ip, info,
+                        promise = $.when();
+                for (var id in interfaces) {
+                    ip = interfaces[id]['ip'];
                     info = new GettingInfoFromDevice(modelName, ip);
                     if (info.abilityGettingInfo && (ip !== '' && ip !== '0.0.0.0')) {
-                        $parentEl.html(body);
-                        $.loading($parentEl.find('.loading'));
-                        ping(ip)
-                                .then(function (ping) {
-                                    access = ping;
-                                    console.log('ping: ', ping);
-                                    if (!ping) {
-                                        $parentEl.empty();
-                                        dfd.resolve('device not availiable');
-                                        
-                                        return $.Deferred();
-                                    }
-                                    return info.general();
-                                })
-                                .then(function (data) {
-                                    if (!data) {
-                                        $parentEl.empty();
-                                        dfd.resolve('impossible to get information from device');
-                                        return $.Deferred();
-                                    }
-                                    sn = data['S/N'];
-                                    $parentEl.find('.section-content')
-                                            .html(createTable('deviceInfoTable', data));
-                                    /*check S/N into database*/
-                                    return getValueAsync('device_list', 'sn', 'id_device', idDevice)
-                                })
-                                .then(function (dbSn) {
-                                    if (!dbSn && access) {
-                                        updateValue('device_list', 'sn', sn, 'id_device', idDevice);
-                                        $parentEl.prepend('<div class="info-message"></div>')
-
-                                        infoMessage($parentEl.find('.info-message'),
-                                                'Serial number ' + sn + ' add to database'
-                                                );
-
-                                    }
-                                    dfd.resolve($parentEl);
-                                })
-                    }
-                    else {
-
-                        dfd.resolve('can`t get info from device');
+                        promise=checkInfoFromInterface(ip,info,promise);
                     }
                 }
-                else {
-                    dfd.resolve('device haven`t network interface');
-                    /*
-                     * need be
-                     * information from db
-                     * 
-                     * */
-                }
-
+                promise
+                        .then(function () {
+                            $parentEl.empty();
+                            dfd.resolve('impossible to get information from device');
+                        });
             });
     return dfd.promise();
 };
@@ -1274,10 +1282,35 @@ var deviceModuleTable = function ($parentEl, idDevice) {
     var getMondulesInfoFromDevice = function (idDevice) {
         var dfd = $.Deferred(),
                 modelName;
+        var checkModulesFromInterface = function (ip, infoDevice, promise) {
+            promise = promise
+                    .then(function () {
+                        return ping(ip);
+                    })
+                    .then(function (ping) {
+                        if (!ping) {
+                            return $.Deferred().reject();
+                        }
+                        return infoDevice.getModulesInfo();
+                    })
+                    .then(
+                            function (modules) {
+                                if (modules) {
+                                    dfd.resolve(modules);
+                                    return $.Deferred();
+                                }
+                                return $.when();
+                            },
+                            function () {
+                                return $.when();
+                            }
+                    );
+            return promise;
+        }
         getDeviceInfo(idDevice)
                 .then(function (data) {
                     modelName = data['model'];
-                    return getInterfaceList(idDevice)
+                    return getInterfaceList(idDevice);
                 })
                 .then(function (interfaces) {
                     var ip, info,
@@ -1286,28 +1319,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                         ip = interfaces[id]['ip'];
                         info = new GettingInfoFromDevice(modelName, ip);
                         if (info.abilityGettingInfo && (ip !== '' && ip !== '0.0.0.0')) {
-                            promise = promise
-                                    .then(function () {
-                                        return ping(ip);
-                                    })
-                                    .then(function (ping) {
-                                        if (!ping) {
-                                            return $.Deferred().reject();
-                                        }
-                                        return info.getModulesInfo();
-                                    })
-                                    .then(
-                                            function (modules) {
-                                                if (modules) {
-                                                    dfd.resolve(modules);
-                                                    return $.Deferred();
-                                                }
-                                                return $.when();
-                                            },
-                                            function () {
-                                                return $.when();
-                                            }
-                                    );
+                            promise = checkModulesFromInterface(ip, info, promise);
                         }
                     }
                     promise
@@ -1525,12 +1537,13 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                     break;
 
                 case 'fromDb':
-                    if (module['edit']) {
+                    if (module['edit']){
                         changeModuleStatusToFree(module['id_module']);
                         addModuleEvent(module['id_module'], 'Change status to "free"')
                         notification('Card/module with <b>' + module['sn'] + '</b> is no longer used in the device.<br>\
                         Unbinding...');
-                    } else {
+                    } 
+                    else {
                         addTrWithExistModuleFromDb(module);
                     }
                     break;
@@ -1539,11 +1552,12 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                     if (module['sn'] !== '') {
                         var stockModules = checkModuleInStock(module['sn']);
                         if (stockModules) {
-                            if (objectLength(stockModules) === 1) {
-                                for (var idModule in stockModules) {
-                                    var sn = stockModules[idModule]['sn'];
-                                    if (stockModules[idModule]['id_device'] != '0') {
-
+                            var  oneModuleHave=(objectLength(stockModules) === 1);
+                            if (oneModuleHave) {
+                                for (var idModule in stockModules) {                                   
+                                    var sn = stockModules[idModule]['sn'],
+                                         moduleFree=stockModules[idModule]['id_device'] === '0';
+                                    if (!moduleFree) {
                                         /*Block resolve problem with ascync*/
                                         (function () {
                                             var idModuleI = idModule,
@@ -1558,8 +1572,8 @@ var deviceModuleTable = function ($parentEl, idDevice) {
                                                                 moduleI['id_module'] = idModuleI;
                                                                 addTrWithExistModule(moduleI);
                                                                 notification('Bind card/module with sn <b>' + snI + '</b>');
-                                                                getDeviceInfo(idDevice).then(function (d) {
-                                                                    addModuleEvent(idModule, 'Bind with device <b>' + d['model'] + ', sn - ' + d['sn'] + '</b>')
+                                                                getDeviceInfo(idDevice).then(function (device) {
+                                                                    addModuleEvent(idModule, 'Bind with device <b>' + device['model'] + ', sn - ' + device['sn'] + '</b>')
                                                                 })
                                                             }
                                                             else {
@@ -3936,7 +3950,17 @@ var getWorkStatus = function ($parentEl, callback) {
     return dfd.promise();
 };
 
-
+var setLocationOnHand = function (idDevice, idEmployee) {
+    var dfd = jQuery.Deferred();
+    insertValueListAsync('devices_on_hands', {id_device: idDevice, id_employee: idEmployee})
+            .then(function (idDeviceOnHand) {
+                return updateValue('device_list', 'id_location', '3', 'id_device', idDevice)
+            })
+            .then(function () {
+                dfd.resolve();
+            })
+    return dfd.promise();
+}
 var addDeviceEvent = function (id, event) {
     return insertValueList('device_history', {event: event, id_device: id});
 };

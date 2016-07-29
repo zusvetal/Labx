@@ -18,24 +18,22 @@ function get_modules_info($ip) {
         if ($value == 'INTEGER: 9') {
             $b = explode('.', $key);
             $index = '.' . end($b);
-            $c = get_oid($ip, array(
+            $device_info = get_oid($ip, array(
                 'descr' => $oid . $desc . $index,
                 'name' => $oid . $name . $index,
                 'sn' => $oid . $sn . $index,
                 'pn' => $oid . $pn . $index
             ));
-            if (preg_match('/quad port fe dvbs-s2 1 module/i', $c['name'])) {
-                $c['name'] = 'Arava 4 Channels';
+            if (preg_match('/quad port fe dvbs-s2 1 module/i', $device_info['name'])) {
+                $device_info['name'] = 'Arava 4 Channels';
+            } elseif (preg_match('/main 1 module/i', $device_info['name'])) {
+                $device_info['name'] = 'Mainboard PVR 7K';
             }
-            elseif (preg_match('/main 1 module/i', $c['name'])) {
-                $c['name'] = 'Mainboard PVR 7K';
-            }
-            $modules[]=$c;
+            $modules[] = $device_info;
         }
     }
     return $modules;
 }
-
 
 if (isset($_POST['get_sn'])) {
     $mip_array = array(

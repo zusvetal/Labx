@@ -579,9 +579,11 @@ $('#content').on('click', 'span.info', function () {
                 return generalDeviceInfoTable($('#generalInfo'), idDevice);
             })
             .then(function (data) {
+                console.log(data);
                 return deviceModuleTable($('#deviceCards'), idDevice);
             })
             .then(function (data) {
+                console.log(data);
             });
 });
 
