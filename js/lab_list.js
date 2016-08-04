@@ -48,12 +48,26 @@ $('table').on('keypress', 'input', function (event) {
 /******************************************************************************/
 
 $('table').on('click', '.remove', function () {
-    var tr = $(this).closest('tr'),
-            idLab = $(tr).attr('data-id-lab');
-    $.confirm("Do you want to remove this lab?")
+    var $tr = $(this).closest('tr'),
+            idLab = $($tr).attr('data-id-lab'),
+                        check = new CheckingAssets(),
+            notification = new DeleteNotification($('#modalField'));
+    check.racksInLab(idLab)
+            .then(function (racks) {
+                if (racks.length === 0) {
+                    return  $.confirm("Do you want to remove this lab?");
+                }
+                else {
+                    notification.racksInLab(racks);
+                    return $.Deferred();
+                }
+            })
             .then(function () {
                 deleteValue('labs', 'id_lab', idLab);
-                $(tr).fadeOut('slow');
+                return $tr.fadeOut('slow');
+            })
+            .then(function () {
+                $tr.remove();
             });
 });
 /*******************************************************/

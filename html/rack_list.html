@@ -1,8 +1,8 @@
 <div id="content">
     <!-- Modal -->
-    <div id="addNewRack"></div>
+    <div id="modalField"></div>
     <!--/Modal-->
-    <div class="item-table"> 
+    <div id="rackList" class="item-table"> 
         <h2>Rack List</h2>
         <span class="add glyphicon glyphicon-plus"></span>
 
@@ -24,7 +24,7 @@
                         <td class="value" data-item="number_of_unit"><?=$rack['number_of_unit']?> </td>  
                         <td><?=$rack['free_space']?></td>
                         <td class="rack-location"><?=$rack['lab_name']?></td>
-                        <td class="hide-td"><span class="glyphicon glyphicon-remove remove"></span></td>
+                        <td class="hide-td icon"><span class="glyphicon glyphicon-remove remove"></span></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif;?>

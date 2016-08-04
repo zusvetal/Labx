@@ -1,6 +1,9 @@
 <div id="content">
-    <div class="item-table"> 
-        
+    <!-- Modal -->
+    <div id="modalField"></div>
+    <!--/Modal-->
+    <div id="labdeskList" class="item-table"> 
+
         <h2>Labdesk List</h2>
         <span class="add glyphicon glyphicon-plus"></span>
         <table class="table table-hover table-bordered" >
@@ -10,10 +13,10 @@
             </tr>
             <?php if(!empty($labdesk_list)):?>
                 <?php foreach( $labdesk_list as $id_labdesk => $labdesk):?> 
-                <tr  class="rack" data-id-labdesk="<?=$id_labdesk?>">
+                <tr  class="labdesk" data-id-labdesk="<?=$id_labdesk?>">
                     <td class="value" data-item="name"><?=$labdesk['name']?> </td>
                     <!--td class="value" data-item="number_of_unit"><?=$rack['number_of_unit']?> </td-->  
-                    <td class="hide-td"><span class="glyphicon glyphicon-remove remove"></span></td>
+                    <td class="hide-td icon"><span class="glyphicon glyphicon-remove remove"></span></td>
                 </tr>
                 <?php endforeach; ?>
             <?php endif;?>

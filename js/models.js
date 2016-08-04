@@ -84,19 +84,69 @@ $('#content ').on('keypress', 'input.update', function (event) {
 /***************************** delete model **********************************/
 /******************************************************************************/
 
-$('table').on('click', '.remove', function () {
-    var $tr = $(this).closest('tr'),
-            idModel = $tr.attr('data-id-model'),
-            $img=$tr.find('.img img');
-    $.confirm("Do you want to remove this model?")
+var deleteDeviceModel = function ($tr) {
+    var     idModel = $tr.attr('data-id-model'),
+            $img = $tr.find('.img img'),
+            check = new CheckingAssets(),
+            notification = new DeleteNotification($('#modalField'));
+
+    check.devicesInStock(idModel)
+            .then(function (devices) {
+                console.log(devices)
+                var devicesExist = (devices.length !== 0);
+                console.log(devicesExist);
+                if (!devicesExist) {
+                    return $.confirm("Do you want to remove this model?");
+                }
+                else {
+                    notification.devicesInStock(devices);
+                    return $.Deferred();
+                }
+            })
             .then(function () {
                 $img.fileManage('delete');
-                deleteValue(table, 'id_model', idModel);
-                return $tr.fadeOut('slow')
+                deleteValue('device_model', 'id_model', idModel);
+                return $tr.fadeOut('slow');
             })
             .then(function () {
                 $tr.remove();
+            });
+}
+var deleteModuleModel = function ($tr) {
+    var     idModel = $tr.attr('data-id-model'),
+            $img = $tr.find('.img img'),
+            check = new CheckingAssets(),
+            notification = new DeleteNotification($('#modalField'));
+
+    check.modulesInStock(idModel)
+            .then(function (modules) {
+                console.log(modules)
+                var modulesExist = (modules.length !== 0);
+                if (!modulesExist) {
+                    return $.confirm("Do you want to remove this model?");
+                }
+                else {
+                    notification.modulesInStock(modules);
+                    return $.Deferred();
+                }
             })
+            .then(function () {
+                $img.fileManage('delete');
+                deleteValue('module_model', 'id_model', idModel);
+                return $tr.fadeOut('slow');
+            })
+            .then(function () {
+                $tr.remove();
+            });
+}
+$('table').on('click', '.remove', function () {
+    var $tr = $(this).closest('tr');
+    if(category==='device'){
+        deleteDeviceModel($tr);
+    }
+    else if(category==='module'){
+        deleteModuleModel($tr);
+    }
 });
 
 

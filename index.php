@@ -3,13 +3,13 @@
 require 'vendor/autoload.php';
 // Create and configure Slim app
 $app = new \Slim\App([
-'settings' => [
+    'settings' => [
 // Slim Settings
         'determineRouteBeforeAppMiddleware' => true,
         'displayErrorDetails' => true,
         'addContentLengthHeader' => false,
-        ]
-]);
+    ]
+        ]);
 
 
 
@@ -17,16 +17,16 @@ $app = new \Slim\App([
 $app->add(function ($request, $response, $next) {
     session_start();
     include_once 'db.php';
-    $uri=$_SERVER['REQUEST_URI'];
+    $uri = $_SERVER['REQUEST_URI'];
     // not logged in
     if (!isset($_SESSION['user'])) {
         if ($request->isXhr() && $uri != '/login') {
             echo 'user not logged already';
             exit();
         }
-        /*if() prevent loop*/
+        /* if() prevent loop */
         if ($uri != '/login') {
-            $_SESSION['last_route']=$uri;
+            $_SESSION['last_route'] = $uri;
             return $response->withRedirect('/login');
         }
 
@@ -34,7 +34,7 @@ $app->add(function ($request, $response, $next) {
     }
     //Check route , add global prefix
     DB::connect();
-    if (!isset($_SESSION['redirect'])&& !$request->isPost()&&!$request->isXhr() &&  !in_array($uri, ['/','/logout'])) {
+    if (!isset($_SESSION['redirect']) && !$request->isPost() && !$request->isXhr() && !in_array($uri, ['/', '/logout'])) {
         $first = explode("/", $uri)[1];
         $id_global_location = get_value('global_location', 'id_global_location', 'name', $first);
         if ($id_global_location) {
@@ -42,29 +42,29 @@ $app->add(function ($request, $response, $next) {
             $_SESSION['redirect'] = $uri;
             return $response->withHeader('location', $uri);
         } else {
-            if(isset($_SESSION['id_global_location'])){
-                $global=strtolower(get_value('global_location', 'name', 'id_global_location', $_SESSION['id_global_location']));
+            if (isset($_SESSION['id_global_location'])) {
+                $global = strtolower(get_value('global_location', 'name', 'id_global_location', $_SESSION['id_global_location']));
                 echo $uri;
-                return $response->withHeader('location', '/'.$global.$uri);
+                return $response->withHeader('location', '/' . $global . $uri);
             }
             return $response->withHeader('location', '/');
         }
-    }else{
+    } else {
         unset($_SESSION['redirect']);
     }
 
 
     // logged in
-    
+
     if (isset($_SESSION['id_global_location'])) {
-        
+
         $_SESSION['lab_list'] = get_lab_list();
-        $_SESSION['location']=  get_value('global_location', 'name', 'id_global_location', $_SESSION['id_global_location']);
-               
+        $_SESSION['location'] = get_value('global_location', 'name', 'id_global_location', $_SESSION['id_global_location']);
     }
-   DB::disconnect(); 
+    DB::disconnect();
+
     return $next($request, $response);
-    
+    $response = $response->withoutHeader('Content-Length');
 });
 
 

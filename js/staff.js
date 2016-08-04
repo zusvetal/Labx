@@ -94,10 +94,18 @@ $('#content').on('click.staff', '.edit-employee', function (event) {
 
 $('#content').on('click.staff', '.remove-team', function () {
     var $tr = $(this).closest('tr'),
-            idTeam = $tr.attr('data-id-team');
-    $.confirm("Do you want to remove this entry?")
-            .then(function () {          
-                return updateValue('staff', 'id_team', '0','id_team',idTeam);
+            idTeam = $tr.attr('data-id-team'),
+                        check = new CheckingAssets(),
+            notification = new DeleteNotification($('#modalField'));
+    check.devicesOnTeam(idTeam)
+            .then(function (devices) {
+                if (devices.length === 0) {
+                    return $.confirm("Do you want to remove this team?")
+                }
+                else {
+                    notification.devicesOnTeam(devices);
+                    return $.Deferred();
+                }
             })
             .then(function () {          
                 return deleteValue('team', 'id_team', idTeam);
@@ -112,8 +120,19 @@ $('#content').on('click.staff', '.remove-team', function () {
 
 $('#content').on('click.staff', '.remove-employee', function () {
     var $tr = $(this).closest('tr'),
-            idEmployee = $tr.data('idEmployee');
-    $.confirm("Do you want to remove this entry?")
+            idEmployee = $tr.data('idEmployee'),
+            check = new CheckingAssets(),
+            notification = new DeleteNotification($('#modalField'));
+    check.devicesOnEmployee(idEmployee)
+            .then(function (devices) {
+                if (devices.length === 0) {
+                    return $.confirm("Do you want to remove this employee?")
+                }
+                else {
+                    notification.devicesOnEmployee(devices);
+                    return $.Deferred();
+                }
+            })
             .then(function () {
                 deleteValue('staff', 'id_employee', idEmployee);
                 return $tr.fadeOut('slow')
@@ -122,6 +141,8 @@ $('#content').on('click.staff', '.remove-employee', function () {
                 $tr.remove();
                 recountNumber($('td.number'));
             });
+
+
 });
 
 

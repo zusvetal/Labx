@@ -86,4 +86,16 @@ $app->get('/get_device_descr', function ($request, $response, $args) {
     }
     include 'html/sections/equipment_description.html';
 });
+
+$app->get('/get_full_values', function ($request, $response, $args) {
+    $table = $request->getQueryParams()['table'];
+    $where_col = $request->getQueryParams()['where_col'];
+    $where_value = $request->getQueryParams()['where_value'];
+    $values_from_db = get_values_full($table, $where_col, $where_value);
+//    $send_values=(empty($values_from_db)) ? [] : $values_from_db;
+    echo json_encode($values_from_db);
+    exit();
+//    return $response->getBody()->write(json_encode($values_from_db));
+});
+
 ?>

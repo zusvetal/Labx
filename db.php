@@ -106,12 +106,13 @@ function get_values($table,$where_col, $where_value) {
     return !empty($value) ? $value : false;
 }
 function get_values_full($table,$where_col, $where_value) {
+    $value=[];
     $result = mysqli_query(db::$link, "SELECT * FROM $table WHERE `$where_col`='$where_value'")
             or die("Invalid query: " . mysqli_error(db::$link));
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
         $value[]= $row;
     }
-    return !empty($value) ? $value : false;
+    return $value;
 }
 function get_value_full_list($table, $where_col, $where_value) {
     $result = mysqli_query(db::$link, "SELECT * FROM $table WHERE `$where_col`='$where_value'")
