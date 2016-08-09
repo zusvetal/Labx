@@ -506,6 +506,26 @@ $('#content').on('click.devices', '.edit-work', function (event) {
             })
 });
 /******************************************************************************/
+/***************************** Show full location  ***************************/
+/******************************************************************************/
+$('#content').on('click.devices', '.show-location span', function () {
+    var $icon = $(this),
+            $table = $icon.closest('table');
+    if ($icon.hasClass('glyphicon-resize-small')) {
+        $icon.removeClass('glyphicon-resize-small')
+                .addClass('glyphicon-resize-full');
+        $table.find('.place .short').hide();
+        $table.find('.place .full').show();
+        
+    }
+    else {
+        $icon.removeClass('glyphicon-resize-full')
+                .addClass('glyphicon-resize-small');
+        $table.find('.place .full').hide();
+        $table.find('.place .short').show();
+    }
+});
+/******************************************************************************/
 /******************************* Init settings ********************************/
 /******************************************************************************/
 //$(document).ready(function() 

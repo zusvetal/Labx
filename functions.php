@@ -130,6 +130,7 @@ function get_devices($device_list) {
             $device_list[$id_device]['interfaces'] = get_interfaces($id_device);
             $device_list[$id_device]['ip'] = !empty($interfaces) ? array_shift($interfaces)['ip'] : '';
             $device_list[$id_device]['host'] = !empty($int2) ? array_shift($int2)['host'] : '';
+            $device_list[$id_device]['location'] = device_location($id_device);
             switch ($device['id_location']) {
                 case '1':
                     $device_list[$id_device]['id_device_in_rack'] = get_value('devices_in_racks', 'id_device_in_rack', 'id_device', $id_device);
@@ -162,5 +163,25 @@ function get_modules() {
     }
     return $module_list;
 }
-
+function device_location($id_device) {
+    $id_location = get_value('device_list', 'id_location', 'id_device', $id_device);
+    switch ($id_location) {
+        case '1':
+            $slot = get_value('devices_in_racks', 'unit', 'id_device', $id_device);
+            $rack_name = get_value('rack', 'name', 'id_rack', get_value('devices_in_racks', 'id_rack', 'id_device', $id_device));
+            $location = "Rack  $rack_name slot  $slot";
+            break;
+        case '2':
+            $labdesk_name = get_value('labdesks', 'name', 'id_labdesk', get_value('devices_in_labdesks', 'id_labdesk', 'id_device', $id_device));
+            $location = $labdesk_name;
+            break;
+        case '3':
+            $location = get_value('staff', 'employee_name', 'id_employee', get_value('devices_on_hands', 'id_employee', 'id_device', $id_device));
+            break;
+        case '4':
+            $location = 'storage';
+            break;
+    }
+    return $location;
+}
 ?>

@@ -492,7 +492,7 @@ $('#viewField').on('click', function (e) {
 /***************************** Init settings **********************************/
 /******************************************************************************/
 var getKeys = function () {
-    console.log(window.location.search.substring(1));
+//    console.log(window.location.search.substring(1));
     var str = decodeURIComponent(window.location.search.substring(1)),
             keys = [];
     if (str === '')
@@ -507,6 +507,7 @@ var getKeys = function () {
     return keys;
 };
 
+$('#infoField').hide();
 var keys = getKeys();
 search.off();
 if (keys) {
@@ -524,3 +525,4 @@ if (keys) {
 }
 search.on();
 search();
+$('#infoField').fadeIn('slow');

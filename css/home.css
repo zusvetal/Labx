@@ -1028,8 +1028,16 @@ td.icon{
 #devicesTable  tr.module:hover .act span{
     display: inline;
 }
+#devicesTable .place .full{
+    display:none;
+}
 
-
+#devicesTable th.show-location span{
+    display: none;
+}
+#devicesTable tr:hover th.show-location span{
+    display: inline;
+}
 
 
 #devicesTable{

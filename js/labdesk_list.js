@@ -358,11 +358,21 @@ var tree = new BinarySearchTree();
 //console.log(tree.size());
 
 
-var check = new CheckingAssets();
-var notification=new DeleteNotification($(''))
-check.devicesInRack('36')
-        .then(function (devices) {
-            if(devices.length !==0){
-                console.log(devices);
-            }
-        })
+//var check = new CheckingAssets();
+//var notification=new DeleteNotification($(''))
+//check.devicesInRack('36')
+//        .then(function (devices) {
+//            if(devices.length !==0){
+//                console.log(devices);
+//            }
+//        })
+
+//function rec(n){
+//    console.log('number of execution BEFORE '+n)
+//    if(n>5){
+//       rec(n-1); 
+//    }
+//    console.log('number of execution AFTER '+n)
+//}
+//rec(10);
+

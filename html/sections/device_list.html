@@ -21,7 +21,7 @@
             <th class="team">Team</th>
             <th class="working-status">Work status</th>
             <th class="transfer-status">Transfer status</th>
-            <th class="hide-td left-border"></th>
+            <th class="hide-td left-border show-location"><span class="glyphicon glyphicon-resize-small" ></span></th> 
         </tr>
     </thead>
     <tbody>
@@ -69,21 +69,24 @@
                     <span class="lable"></span>
                     <span class="glyphicon glyphicon-edit td-icon edit-trans"></span>
                 </td>
-                <td class="status hide-td place">
+                <td class=" hide-td place">
+                    <span class="small full">
+                        <b><?=$device['location']?></b>
+                    </span>
                     <?php if($device['id_location']==='1'):?>
-                    <span class="glyphicon infoRack" data-id-device-in-rack="<?=$device['id_device_in_rack']?>">
+                    <span class="glyphicon short infoRack" data-id-device-in-rack="<?=$device['id_device_in_rack']?>">
                         rack
                     </span>
                     <?php elseif ($device['id_location']==='2'):?>
-                    <span class="glyphicon" data-id-device-in-labdesk="<?=$device['id_device_in_labdesk']?>">
-                        labdesk
+                    <span class="glyphicon short" data-id-device-in-labdesk="<?=$device['id_device_in_labdesk']?>">
+                        <?=$device['location']?>;
                     </span>
                     <?php elseif ($device['id_location']==='3'):?>
-                    <span class="glyphicon" data-id-device-on-hand="<?=$device['id_device_on_hand']?>">
+                    <span class="glyphicon short" data-id-device-on-hand="<?=$device['id_device_on_hand']?>">
                         on hand
                     </span>
                     <?php elseif ($device['id_location']==='4'):?>
-                    <span class="glyphicon">
+                    <span class="glyphicon short">
                         storage
                     </span>
                     <?php endif;?>

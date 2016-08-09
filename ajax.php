@@ -214,11 +214,24 @@ if (isset($_POST['unbind_modules'])) {
 if (isset($_POST['insert_port_list_port_set'])) {
     echo insert_port_list_port_set($_POST['id_port'], $_POST['id_port_set']);
 }
+
+
 if (isset($_POST['get_info'])) {
     if ($_POST['get_info'] === 'device') {
         $info = get_device($_POST['id']);
+        $info['location']=  device_location($_POST['id']);
+
     } elseif ($_POST['get_info'] === 'module') {
         $info = get_module($_POST['id']);
+        $id_device=get_value('module_list', 'id_device', 'id_module', $_POST['id']);
+        if ($id_device=='0') {
+            $info['location']="Free";
+        }
+        else{
+            $device=get_device($id_device);
+            $info['location']= $device['model']." barcode: ".$device['asset_harmonic'].
+                    " sn: ".$device['sn'];
+        }
     }
     include 'html/sections/equipment_info.html';
 }
@@ -245,16 +258,7 @@ if (isset($_POST['check_ip'])) {
             exit();
         }
         $device['location'] = get_value('location', 'name', 'id_location', $device['id_location']);
-        if ($device['id_location'] === '1') {
-            $slot = get_value('devices_in_racks', 'unit', 'id_device', $id_device);
-            $rack_name = get_value('rack', 'name', 'id_rack', get_value('devices_in_racks', 'id_rack', 'id_device', $id_device));
-            $device['descr'] = "rack - $rack_name, slot - $slot";
-        } elseif ($device['id_location'] === '2') {
-            $labdesk_name = get_value('labdesks', 'name', 'id_labdesk', get_value('devices_in_labdesks', 'id_labdesk', 'id_device', $id_device));
-            $device['descr'] = $labdesk_name;
-        } elseif ($device['id_location'] === '3') {
-            $device['descr'] = get_value('staff', 'employee_name', 'id_employee', get_value('devices_on_hands', 'id_employee', 'id_device', $id_device));
-        }
+        $device['descr']=  device_location($id_device);
         echo json_encode($device);
     } elseif ($id_virt) {
         $id_device = get_value('interfaces', 'id_device', 'id_interface', get_value('virtual_mashines', 'id_interface', 'id_virtual_mashine', $id_virt));
@@ -265,12 +269,9 @@ if (isset($_POST['check_ip'])) {
         }
         $device['location'] = get_value('location', 'name', 'id_location', $device['id_location']);
         if ($device['id_location'] === '1') {
-            $slot = get_value('devices_in_racks', 'unit', 'id_device', $id_device);
-            $rack_name = get_value('rack', 'name', 'id_rack', get_value('devices_in_racks', 'id_rack', 'id_device', $id_device));
-            $device['descr'] = "Virtual host. Rack - $rack_name, slot - $slot";
+            $device['descr'] = "Virtual host. ". device_location($id_device);
         } elseif ($device['id_location'] === '2') {
-            $labdesk_name = get_value('labdesks', 'name', 'id_labdesk', get_value('devices_in_labdesks', 'id_labdesk', 'id_device', $id_device));
-            $device['descr'] = $labdesk_name . ". Virtual host";
+            $device['descr'] = device_location($id_device) . ". Virtual host";
         } elseif ($device['id_location'] === '3') {
             $device['descr'] = get_value('staff', 'employee_name', 'id_employee', get_value('devices_on_hands', 'id_employee', 'id_device', $id_device));
         }
@@ -287,19 +288,7 @@ if (isset($_POST['device_json_info'])) {
         exit();
     }
     $device['location'] = get_value('location', 'name', 'id_location', $device['id_location']);
-    if ($device['id_location'] === '1') {
-        $slot = get_value('devices_in_racks', 'unit', 'id_device', $id_device);
-        $rack_name = get_value('rack', 'name', 'id_rack', get_value('devices_in_racks', 'id_rack', 'id_device', $id_device));
-        $device['descr'] = "Rack  $rack_name slot  $slot";
-    } elseif ($device['id_location'] === '2') {
-        $labdesk_name = get_value('labdesks', 'name', 'id_labdesk', get_value('devices_in_labdesks', 'id_labdesk', 'id_device', $id_device));
-        $device['descr'] = $labdesk_name;
-    } elseif ($device['id_location'] === '3') {
-        $device['descr'] = get_value('staff', 'employee_name', 'id_employee', get_value('devices_on_hands', 'id_employee', 'id_device', $id_device));
-    }
-    elseif ($device['id_location'] === '4') {
-        $device['descr'] = 'storage';
-    }
+    $device['descr']=  device_location($id_device);
     echo json_encode($device);
 }
 if (isset($_POST['get_patchpanel_info'])) {
