@@ -8,24 +8,34 @@ var getSearchDevices = function (keys) {
                 keys: keys
             },
     function (table) {
-        setLocation(window.location.origin+window.location.pathname+this.url.replace('/get_search_devices', ''));
+        var host=window.location.origin,
+                path=window.location.pathname,
+                query=this.url.replace('/get_search_devices', ''),
+                currentUrl=host+path+query;
+        
+        console.log(host,path,query,this);
+        setLocation(currentUrl);
         $('#infoField').html(table);
         checkMenuOption();
         checkViewOption();
     });
 };
 var getSearchModules = function (keys) {
-   
-  return $.get(
+    return $.get(
             "/get_search_modules",
             {
                 keys: keys
             },
     function (table) {
-      setLocation(window.location.origin+window.location.pathname+this.url.replace('/get_search_modules', ''));
-      $('.item-table').html(table);
-      checkMenuOption();
-      checkViewOption();
+        var host = window.location.origin,
+                path = window.location.pathname,
+                query = this.url.replace('/get_search_modules', ''),
+                currentUrl = host + path + query;
+
+        setLocation(currentUrl);
+        $('.item-table').html(table);
+        checkMenuOption();
+        checkViewOption();
     });
 };
 var searchElements = function () {
@@ -84,7 +94,7 @@ var checkViewOption = function () {
 /*** Location ***/
 $('#content').on('click', 'button.key[data-key="id_location"]', function () {
     var $btn = $(this),
-            location = new List('location', 'id_location', 'name', {type: 'select',width:'12'});
+            location = new List('location', 'id_location', 'name', {type: 'select', width: '12'});
     if ($btn.hasClass('choose')) {
         $btn.removeClass('choose');
         $('#id_location').remove();
@@ -106,6 +116,7 @@ $('#content').on('click', 'button.key[data-key="id_location"]', function () {
                 })
     }
 });
+
 
 /*** Status ***/
 $('#content').on('click', 'button.key[data-key="status"]', function () {
@@ -502,10 +513,11 @@ var getKeys = function () {
             .replace(/\&/g, '"&')
             .replace(/\=/g, '="')
             .replace(/\&/g, ';');
-    str=str+'"';
+    str=str+'"';  
     eval(str);
     return keys;
 };
+
 
 $('#infoField').hide();
 var keys = getKeys();
@@ -516,13 +528,24 @@ if (keys) {
             $('#menuField .transfer-status').click();
         }
         if (key === 'id_work_status') {
+            
             $('#menuField .work-status').click();
-        }
+        }            
             $('[data-key="' + key + '"]').click();
-            $('#' + key).find('input').val(keys[key]);
-            $('#' + key).find('select').find('[value="'+keys[key]+'"]').attr('selected','selected');
+        $('#' + key).find('input').val(keys[key]);
+        (function () {
+            var value = keys[key],
+                    parametr = key;
+            setTimeout(function () {
+                $('#' + parametr).find('select').find('[value="' + value + '"]').attr('selected', 'selected');
+            }, 100);
+        })()          
     }
 }
-search.on();
-search();
-$('#infoField').fadeIn('slow');
+setTimeout(function () {
+    search.on();
+    search();
+},200)
+setTimeout(function () {
+    $('#infoField').fadeIn('slow');
+},300)

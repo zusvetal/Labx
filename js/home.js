@@ -1,5 +1,6 @@
 var setLocation = function (curLoc) {
-    try {
+    try
+    {
         history.pushState(null, null, curLoc);
         return;
     } catch (e) {
