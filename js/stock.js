@@ -518,7 +518,7 @@ var getKeys = function () {
     return keys;
 };
 
-
+$.startLoadingPage()
 $('#infoField').hide();
 var keys = getKeys();
 search.off();
@@ -547,5 +547,9 @@ setTimeout(function () {
     search();
 },200)
 setTimeout(function () {
-    $('#infoField').fadeIn('slow');
+    
+    $('#infoField').fadeIn('slow',function(){
+        $.stopLoadingPage();
+    });
+    
 },300)

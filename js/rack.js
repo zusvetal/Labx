@@ -229,8 +229,7 @@ $('#content').on('click', 'span.add-device', function () {
                                     .then(function () {
                                         modal.hide();
                                     })
-                            break;
-                            
+                            break;                            
                     }
                     $('#content').off('click', '#elementNavigation button');
                 });

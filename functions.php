@@ -91,13 +91,19 @@ function rack($id_rack, $point_device = FALSE) {
             $tower = $device_info['size_in_unit'];
         }
         //      $point=($point_device==$device_info['id_device_in_rack'])?'1':'0';
-
+        /*model of device*/
+        if ($device_info['id_device'] !== '0') {
+            $model_name = get_value('device_model', 'model', 'id_model', get_value('device_list', 'id_model', 'id_device', $device_info['id_device']));
+        }
+        else{
+            $model_name=$device_info['model'];
+        }
         $rack[$unit] = array(
             'id_device_in_rack' => $device_info['id_device_in_rack'],
             'mng_ip' => $device_info['mng_ip'],
             'interfaces' => !empty($device_info['id_device']) ? get_interfaces($device_info['id_device']) : '',
             'ctrl_power' => $device_info['ctrl_power'],
-            'model' => $device_info['model'],
+            'model' => $model_name,
             'rack_name' => $device_info['rack_name'],
             'id_device' => $device_info['id_device'],
             'mark' => $device_info['is_mark'],

@@ -253,17 +253,6 @@ var ping = function (ip, callback) {
             "json"
             );
 };
-var createTable = function (idTable, objList) {
-    var table = '<table class="table" id="' + idTable + '">';
-    for (var item in objList) {
-        table += '<tr>\
-                    <td>' + item + '</td>\
-                    <td>' + objList[item] + '</td>\
-        </tr>';
-    }
-    table += '</table>';
-    return table;
-};
 var infoMessage = function ($parentEl, warningString, callback) {
     $parentEl.prepend('<div  class="alert alert-info">\
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">\
@@ -1066,8 +1055,20 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
                 <div id="genInfoCollaps"" class="section-content collapse in">\
                    <div class="loading"></div>\
                 </div>';
-    var checkInfoFromInterface = function (ipDevice, infoDevice,promise) {
-        promise = promise
+    var createTable = function (idTable, objList) {
+        var table = '<table class="table"  id="' + idTable + '">';
+        for (var item in objList) {
+            table += '<tr>\
+                    <td>' + item + '</td>\
+                    <td>' + objList[item] + '</td>\
+        </tr>';
+        }
+        table += '</table>';
+        return table;
+    };
+    
+    var getDeviceInfoFromInterface = function (ipDevice, infoDevice, oldPromise) {
+        var newPromise = oldPromise
                 .then(function () {
                     return ping(ipDevice);
                 })
@@ -1077,14 +1078,18 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
                     }
                     return infoDevice.general();
                 })
+        return newPromise;
+    }
+    var printDeviceInfo = function (oldPromise) {
+        var newPromise = oldPromise
                 .then(
                         function (generalInfo) {
                             if (generalInfo) {
                                 sn = generalInfo['S/N'];
                                 $parentEl.find('.section-content')
                                         .html(createTable('deviceInfoTable', generalInfo));
-                                /*check S/N into database*/
-                                return getValueAsync('device_list', 'sn', 'id_device', idDevice);
+                                $parentEl.find('#deviceInfoTable').css('font-style', 'italic');
+                                return $.Deferred().resolve();
                             }
                             else {
                                 return $.Deferred().reject();
@@ -1094,41 +1099,71 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
                             return $.Deferred().reject();
                         }
                 )
+        return newPromise;
+    }
+    var getSnFromDb = function (oldPromise) {
+        var newPromise = oldPromise
+                .then(
+                        function () {
+                            return getValueAsync('device_list', 'sn', 'id_device', idDevice);
+                        },
+                        function () {
+                            return $.Deferred().reject();
+                        })
+        return newPromise;
+    }
+    var writeSnToDb=function(oldPromise){
+        var newPromise=oldPromise
                 .then(
                         function (dbSn) {
-                            console.log(dbSn);
-                            if (!dbSn && access) {
+                            if (!dbSn) {
                                 updateValue('device_list', 'sn', sn, 'id_device', idDevice);
                                 $parentEl.prepend('<div class="info-message"></div>');
                                 infoMessage($parentEl.find('.info-message'),
                                         'Serial number ' + sn + ' add to database'
                                         );
-
                             }
-                            dfd.resolve($parentEl);
-                            return $.Deferred();
+                            return $.Deferred().resolve();
                         },
                         function () {
-                            return $.when();
+                            return $.Deferred().reject();
                         }
                 )
-        return promise;
+        return newPromise;
     }
+   
+
     $parentEl.html(body);
     $.loading($parentEl.find('.loading'));
+    var promise = $.when();    
     getDeviceInfo(idDevice)
             .then(function (data) {
                 modelName = data['model'];
                 return getInterfaceList(idDevice);
             })
             .then(function (interfaces) {
-                var ip, info,
+                var info,
                         promise = $.when();
                 for (var id in interfaces) {
-                    ip = interfaces[id]['ip'];
+                    var ip = interfaces[id]['ip'];
                     info = new GettingInfoFromDevice(modelName, ip);
                     if (info.abilityGettingInfo && (ip !== '' && ip !== '0.0.0.0')) {
-                        promise=checkInfoFromInterface(ip,info,promise);
+                        promise = getDeviceInfoFromInterface(ip, info, promise);
+                        promise = printDeviceInfo(promise);
+                        promise = getSnFromDb(promise);
+                        promise = writeSnToDb(promise);
+                        promise = promise
+                                .then(
+                                        function () {
+                                            dfd.resolve($parentEl);
+                                            
+                                            /*interrupt chain*/
+                                            return $.Deferred();
+                                        },
+                                        function () {
+                                            return $.when();
+                                        }
+                                );
                     }
                 }
                 promise
@@ -1136,7 +1171,7 @@ var generalDeviceInfoTable = function ($parentEl, idDevice) {
                             $parentEl.empty();
                             dfd.resolve('impossible to get information from device');
                         });
-            });
+            }); 
     return dfd.promise();
 };
 
@@ -3083,12 +3118,9 @@ var insertDeviceIntoRack = function (idRack, topSlot, callback) {
                                 "Device model <b>" + modelName + "</b> not exist in the db.<br/> \
                                         Add <b>" + modelName + "</b> to model database.");
                         modelForm.getForm($parentEl.find('#modelForm'),
-                                {size_in_unit: size, model: modelName, id_formfactor: idFormFactor},
-                        function () {
-                            $('#modalWindow').animate({
-                                scrollTop: $('.info-field').offset().top
-                            }, 1000);
-                        })
+                                    {size_in_unit: size, model: modelName, id_formfactor: idFormFactor},
+                                    slideToEl($('#modalWindow'), $('.info-field'))
+                                )
                                 .then(function () {
                                     return modelForm.eventListener();
                                 })
@@ -3970,7 +4002,8 @@ var getLeftRackMenu = function ($parentEl, callback) {
             });
 };
 var getRack = function ($parentEl, idRack, callback) {
-    return $.post(
+    var dfd =$.Deferred();
+    $.post(
             "/rack.php",
             {
                 get_rack: '1',
@@ -3981,7 +4014,9 @@ var getRack = function ($parentEl, idRack, callback) {
         if (typeof callback !== 'undefined') {
             callback($parentEl);
         }
+        dfd.resolve($parentEl);
     });
+    return dfd.promise();
 };
 var showDeviceInRack = function ($parentEl, idDevice) {
     var dfd = jQuery.Deferred();
@@ -4292,6 +4327,12 @@ jQuery.loading = function ($parentEl, options) {
     }
     
     $parentEl.html('<img width="'+settings.width+'",height="'+settings.height+'", src="/img/loading_elepsis.gif">');
+};
+jQuery.startLoadingPage = function (options) {
+   $('body').prepend('<div id="loadingPage"> </div>');
+};
+jQuery.stopLoadingPage = function (options) {
+   $('body').find('#loadingPage').fadeOut('slow');
 };
 /******************************************************************************/
 /************************* Shake plugin window *****************************/
