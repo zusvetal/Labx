@@ -13,7 +13,6 @@ var getSearchDevices = function (keys) {
                 query=this.url.replace('/get_search_devices', ''),
                 currentUrl=host+path+query;
         
-        console.log(host,path,query,this);
         setLocation(currentUrl);
         $('#infoField').html(table);
         checkMenuOption();

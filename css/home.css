@@ -1119,30 +1119,15 @@ td.icon{
     background-color: rgba(154, 143, 172, 0.3);
     font-weight: 600;
 }
-#devicesTable .table-vm td[data-item="virt_ip"]{
-    width:20%;
+#devicesTable td.virt-comment{
+    font-size: 12px;
+    
 }
-#devicesTable .table-vm td[data-item="virt_host"]{
-    width:35%;
+#devicesTable td.virt-comment p{
+    margin:0px;
 }
-#devicesTable .table-vm td[data-item="os"]{
-    width:42%;
-}
-
-#devicesTable .table-vm .circle{
-    width:3%;
-    max-width: 30px;
-}
-#devicesTable .vm-field{
-    padding-left: 60px;
-}
-#devicesTable .table-vm .act span
-{
-    display: none;
-}
-#devicesTable .table-vm tr:hover .act span
-{
-    display: inline;
+#devicesTable .place{
+    width:74px;
 }
 
 /*******************************************************************************/

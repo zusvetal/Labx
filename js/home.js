@@ -4318,7 +4318,7 @@ jQuery.alert = function (dialog, callback) {
 /*************************  Loading *******************************************/
 /******************************************************************************/
 jQuery.loading = function ($parentEl, options) {
-    var settings = {
+    var settings = {  
         width: 50,
         height: 30
     }

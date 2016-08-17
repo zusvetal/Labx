@@ -147,11 +147,7 @@ function get_interface_list($id_device, $id_type = false) {
 }
 function get_virtual_list($id_interface = false) {
     $query = "SELECT
-            id_virtual_mashine,
-            id_interface,
-            virt_ip,
-            virt_host,
-            os
+            *
 	FROM 
            virtual_mashines
 	";
@@ -167,11 +163,7 @@ function get_virtual_list($id_interface = false) {
 }
 function get_vm($id_virtual_mashine) {
     $query = "SELECT
-            id_virtual_mashine,
-            id_interface,
-            virt_ip,
-            virt_host,
-            os
+            *
 	FROM 
             virtual_mashines
         WHERE 

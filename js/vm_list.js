@@ -1,11 +1,3 @@
-$('#content').on('click.device', '.remove-host', function (e) {
-    var $tr = $(this).closest('tr'),
-            idVirtualMashine = $tr.data('idVirtualMashine');
-     deleteValue('virtual_mashines','id_virtual_mashine',idVirtualMashine)
-             .then(function(){
-                 $tr.fadeOut(function(){$(this).remove()});
-     });
-});
 
 /******************************************************************************/
 /***************************** add  vm host **********************************/
@@ -22,8 +14,8 @@ var getVMRow = function (idVirtualMashine) {
 $('#content').on('click.device', 'span.add-host', function (event) {
     event.preventDefault();
     var
-            idInterface=$(this).closest('tr.hyp').find('+tr.vm-list').data('idInterface'),
-            $vmTable=$(this).closest('tr.hyp').find('+tr.vm-list table'),
+            $deviceRow = $(this).closest('.hyp'),
+            idInterface = $deviceRow.find('.virt-host').data('idInterface'),
             modal = new Modal(),
             form = new VMForm(idInterface);
     modal.getModal($('#vmForm'))
@@ -40,13 +32,11 @@ $('#content').on('click.device', 'span.add-host', function (event) {
                 modal.hide();
                 return getVMRow(idVirtualMashine);
             })
-            .then(function (newVM) {
+            .then(function (newVMRow) {
                 modal.hide();
-                if ($vmTable.find('tbody').length != '1') {
-                    $vmTable.html('<tbody></tbody>');
-                }
-                    $vmTable.find('tbody').prepend(newVM)
-                highLightNewEntry($vmTable.find('tr.vm:nth-of-type(1)'));
+                $deviceRow.after(newVMRow);
+                var $newVMRow = $deviceRow.next();
+                highLightNewEntry($newVMRow);
             })
 
 })
@@ -82,3 +72,23 @@ $('#content').on('click.device', 'span.edit-host', function (event) {
             })
 
 })
+/******************************************************************************/
+/***************************** remove vm host **********************************/
+/******************************************************************************/
+$('#content').on('click.device', '.remove-host', function (e) {
+    var $tr = $(this).closest('tr'),
+            idVirtualMashine = $tr.data('idVirtualMashine');
+    $.confirm("Do you want to remove this virtual host?")
+            .then(function () {
+                return  deleteValue('virtual_mashines', 'id_virtual_mashine', idVirtualMashine)
+            })
+            .then(function () {
+                return $tr.fadeOut();
+            })
+            .then(function () {
+                $tr.remove();
+            });
+});
+/******************************************************************************/
+/***************************** initial settings *******************************/
+/******************************************************************************/
