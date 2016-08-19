@@ -129,13 +129,13 @@ function get_devices($device_list) {
     if (!empty($device_list)) {
         foreach ($device_list as $id_device => $device) {
             $interfaces = get_interface_list($id_device);
-            $int2 = $interfaces;
+            $interfaces_copy = $interfaces;
             $device_list[$id_device]['modules'] = get_module_list(['id_device'=>$id_device]);
             $device_list[$id_device]['employee_name'] = get_value('staff', 'employee_name', 'id_employee', $device['id_owner']);
             $device_list[$id_device]['team_name'] = get_value('team', 'team_name', 'id_team', $device['id_team']);
             $device_list[$id_device]['interfaces'] = get_interfaces($id_device);
             $device_list[$id_device]['ip'] = !empty($interfaces) ? array_shift($interfaces)['ip'] : '';
-            $device_list[$id_device]['host'] = !empty($int2) ? array_shift($int2)['host'] : '';
+            $device_list[$id_device]['host'] = !empty($interfaces_copy) ? array_shift($interfaces_copy)['host'] : '';
             $device_list[$id_device]['location'] = device_location($id_device);
             switch ($device['id_location']) {
                 case '1':

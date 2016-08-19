@@ -39,6 +39,7 @@ $app->get('/get_search_devices', function ($request, $response, $args) {
         foreach ($device_list as $id_device => $device) {
             if (!empty($device['interfaces'])) {
                 foreach ($device['interfaces'] as $id_int => $int) {
+                    /*interface type is hypervisor*/
                     if ($int['id_type'] === '3') {
                         $vm[$id_device] = $device_list[$id_device];
                     }
@@ -97,5 +98,14 @@ $app->get('/get_full_values', function ($request, $response, $args) {
     exit();
 //    return $response->getBody()->write(json_encode($values_from_db));
 });
-
+$app->get('/get_hypervisor_tr', function ($request, $response, $args) {
+    $id_device=$request->getQueryParams()['id_device'];
+    $interfaces=get_interfaces($id_device);
+    
+    $device = get_device($id_device);
+    $device['interfaces']= $interfaces;
+    $device['host'] = !empty($interfaces) ? array_shift($interfaces)['host'] : '';
+    
+    include 'html/sections/hypervisor_tr.html';
+});
 ?>

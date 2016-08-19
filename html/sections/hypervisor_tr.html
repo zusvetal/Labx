@@ -1,0 +1,51 @@
+<tr class="item hyp <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-device="<?=$device['id_device']?>" data-id-location="<?=$device['id_location']?>">
+    <?php if($_SESSION['level']=='0'):?>
+    <td class="hide-td right-border icon">
+        <span class="glyphicon glyphicon-plus add-host" data-toggle="tooltip" title="add virtual host"></span>
+    </td>               
+    <?php endif;?>       
+    <td class="number"></td>
+    <td class="ip edit" data-item="ip">
+        <?php if( !empty($device['interfaces'])):?>
+        <?php foreach( $device['interfaces'] as $id_int => $int):?>
+        <span class="ip-interface <?php echo !empty($int['virt'])?'virt-host':''?>" data-toggle="popover" data-id-interface="<?=$id_int?>">
+            <?=$int['ip']?>
+        </span>
+        <?php endforeach; ?>
+        <?php endif;?>
+        <?php if($_SESSION['level']=='0'):?>
+        <span class="glyphicon glyphicon-edit td-icon update-hyp-ip"></span>
+        <?php endif;?>                         
+    </td>       
+    <td class="host" data-item="host"><?=$device['host']?></td>            
+    <td class="value device model" data-item="model"><?=$device['model']?> </td>
+    <td class="value device team" data-item="team"><?=$device['team_name']?> </td>
+    <td class=" hide-td place">
+        <span class="small full">
+            <b><?=$device['location']?></b>
+        </span>
+        <?php if($device['id_location']==='1'):?>
+        <span class="glyphicon short" data-id-device-in-rack="<?=$device['id_device_in_rack']?>">
+            rack
+        </span>
+        <?php elseif ($device['id_location']==='2'):?>
+        <span class="glyphicon short" data-id-device-in-labdesk="<?=$device['id_device_in_labdesk']?>">
+            <?=$device['location']?>
+        </span>
+        <?php elseif ($device['id_location']==='3'):?>
+        <span class="glyphicon short" data-id-device-on-hand="<?=$device['id_device_on_hand']?>">
+            on hand
+        </span>
+        <?php elseif ($device['id_location']==='4'):?>
+        <span class="glyphicon short">
+            storage
+        </span>
+        <?php endif;?>
+    </td>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-info-sign info info-device" 
+                                   data-id-device="<?=$device['id_device']?>" data-toggle="tooltip" title="device info"></span></td>
+    <?php if($_SESSION['level']=='0'):?>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-edit edit-device" data-toggle="tooltip" title="edit device"></span></td>
+    <td class="icon hide-td"><span class="glyphicon glyphicon-remove remove-device" data-toggle="tooltip" title="remove device" ></span></td>
+    <?php endif;?>
+</tr>

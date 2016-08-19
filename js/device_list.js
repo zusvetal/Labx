@@ -1,7 +1,4 @@
 $('#content').off('.devices','**');
-/******************************************************************************/
-/***************************** add  device **********************************/
-/******************************************************************************/
 var getDeviceRow = function (idDevice) {
     return  $.post(
             "/ajax",
@@ -11,6 +8,24 @@ var getDeviceRow = function (idDevice) {
             }
     );
 };
+var updateDeviceRow = function ($tr) {
+    var idDevice = $tr.data('idDevice');
+    return getDeviceRow(idDevice)
+            .then(function (tr) {
+                $tr.replaceWith(tr)
+                recountNumber($('td.number'));
+            });
+
+}
+var highlightingRowRemove=function($tr){
+    $tr.removeClass('info');
+}
+var highlightRow=function($tr){
+    $tr.addClass('info');
+}
+/******************************************************************************/
+/***************************** add  device **********************************/
+/******************************************************************************/
 
 $('#content').on('click.devices', 'span.add', function (event) {
     event.preventDefault();
@@ -103,9 +118,9 @@ $('#content').on('click.devices', 'span.edit-device', function (event) {
             .then(function () {
                 /*Action after closing modal window*/
                 $('#content').on('hidden.bs.modal', modal.object, function () {
-                    $tr.removeClass('info');
+                    highlightingRowRemove($tr);
                 });
-                $tr.addClass('info');
+                highlightRow($tr);
                 return form.getForm(modal.getBodyField(),{id:idDevice});
             })
             .then(function (idDevice) {
@@ -115,12 +130,9 @@ $('#content').on('click.devices', 'span.edit-device', function (event) {
                 return form.eventListener();
             })
             .then(function () {
-                return getDeviceRow(idDevice);
+                return updateDeviceRow($tr)
             })
             .then(function (tr) {
-                $tr.replaceWith(tr)
-//                highLightNewEntry();
-                recountNumber($('td.number'));
                 modal.hide();
             });
 });
@@ -180,14 +192,15 @@ $('#content').on('click.devices', 'span.insert-module', function (event) {
             .then(function () {
                 modal.setWidth('50%');
                 modal.setTitle('<b>Choose module/card, which you want to insert to device<b>');
+                
                 /*Action after closing modal window*/
                 $('#content').on('hidden.bs.modal', modal.object, function () {
-                    $tr.removeClass('info');
+                    highlightingRowRemove($tr);
                 });
                 return list.getList(modal.getBodyField());
             })
             .then(function () {
-                $tr.addClass('info');
+                highlightRow($tr);
                 modal.show();               
                 return list.eventListener();
             })
@@ -232,6 +245,7 @@ $('#content').on('click.devices', 'span.unbind', function () {
 /******************************************************************************/
 /***************************** Add/update interfaces *********************************/
 /******************************************************************************/
+
 $('#content').on('click.devices', '.update-ip', function () {
     var $tr=$(this).closest('tr'),
     idDevice = $tr.data('idDevice'),
@@ -240,10 +254,14 @@ $('#content').on('click.devices', '.update-ip', function () {
     int = new interfaceForm(); 
     modal.getModal($('#editInterfaces'))
             .then(function () {
-                $tr.addClass('info');
+                highlightRow($tr);
+        
+                /*action after closing modal window*/
                 $('#content').on('hidden.bs.modal', modal.object, function () {
-                    location.reload();
+                    updateDeviceRow($tr);
+                    $highlightingDeviceRowRemove($tr);
                 });
+                
                 modal.setTitle('Add network interfaces for <b>' + modelName + '</b>');
                 modal.setWidth('30%');
                 modal.show();
@@ -252,7 +270,7 @@ $('#content').on('click.devices', '.update-ip', function () {
             .then(function (data) {
                 return int.eventListener();
             })
-            .then(function (data) {
+            .then(function () {
                 modal.hide();
             })
             
@@ -268,9 +286,9 @@ $('#content').on('click.devices', 'span.infoRack', function () {
             idDevice = $tr.data('idDevice'),
             modalName = $tr.find('td.model').text(),
             ip, slot, idRack, rackName;
-    $tr.addClass('info');
+    highlightRow($tr);
     $('#content').on('hidden.bs.modal', modal.object, function () {
-        $tr.removeClass('info');
+        highlightingRowRemove($tr);
     });
     modal.getModal($('#deviceInfo'), function () {
         ip = getValue('devices_in_racks', 'mng_ip', 'id_device_in_rack', idDeviceInRack);
@@ -322,7 +340,6 @@ $('#content').on('click.devices', 'span.info-device', function () {
             .then(function () {
                 /***get device information body***/
                 modal.setWidth('50%');
-//                modal.setTitle('<b>' + modelName + '</b>');
                 modal.show();
                 modal.addBody('<div id="statusInfo"></div>\
                                <div id="mainInfo"></div>\
@@ -332,6 +349,11 @@ $('#content').on('click.devices', 'span.info-device', function () {
                                <div id="deviceCards"></div>\
                                <div id="historyEvents"></div>\
                               ')
+                highlightRow($tr);
+                
+                $('#content').on('hidden.bs.modal', modal.object, function () {
+                    highlightingRowRemove($tr);
+                });
                 return getMainInfo($('#mainInfo'), 'device', idDevice);
             })
             .then(function () {
@@ -367,9 +389,9 @@ $('#content').on('click.devices', 'span.transfer', function () {
                 modal.setWidth('30%');
                 modal.setTitle('Transfer <b>' + modelName + '</b>');
                 modal.show();
-                $tr.addClass('info');
+                highlightRow($tr);
                 $('#content').on('hidden.bs.modal', modal.object, function () {
-                    $tr.removeClass('info');
+                    highlightingRowRemove($tr);
                 });
                 modal.addBody('<div id="head"></div>\
                                 <div id="globalLocations"></div>\

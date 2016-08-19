@@ -1,3 +1,4 @@
+?php foreach( $device_list as $device):?>
 <tr class="item <?php echo $_SESSION['level']=='0'? 'editable' : ''?>" data-id-transfer-status="<?=$device['id_transfer_status']?>"
     data-id-work-status="<?=$device['id_work_status']?>"
     data-id-device="<?=$device['id_device']?>" data-id-location="<?=$device['id_location']?>">

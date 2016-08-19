@@ -2386,9 +2386,19 @@ var interfaceForm = function () {
                     });
                 }
             });
-            if (valid === true) {
+            
+            var $interfaces=$parentEl.find('.interface');
+            
+            if (!$interfaces.exists()) {
+                dfd.resolve();
+                dfd.always($parentEl.off('.interface', '**'));
+                
+                return false;
+            }
+            
+            if (valid) {
                 /*insert/update interface value*/
-                $parentEl.find('.interface').each(function (index) {
+                $interfaces.each(function (index) {
                     var $interface = $(this),
                             ip = $interface.find('.ip').val().trim(),
                             host = $interface.find('.hostname').val().trim(),
@@ -2420,7 +2430,6 @@ var interfaceForm = function () {
                                                 host = $virt.find('[name="virt_host"]').val().trim(),
                                                 os = $virt.find('[name="os"]').val().trim(),
                                                 idVirtualMashine = $virt.data('idVirtualMashine') !== 0 ? $virt.data('idVirtualMashine') : insertValue('virtual_mashines', 'id_interface', idInterface);
-                                        console.log(ip, host, os, idVirtualMashine);
                                         updateValueList('virtual_mashines', {virt_ip: ip, virt_host: host, os: os}, 'id_virtual_mashine', idVirtualMashine);
                                     });
                                 }

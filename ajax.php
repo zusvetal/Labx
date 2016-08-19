@@ -74,10 +74,12 @@ if (isset($_POST['get_module_tr'])) {
     include 'html/sections/module_tr.html';
 }
 if (isset($_POST['get_device_tr'])) {
-    $device = get_device($_POST['id_device']);
-    $device['employee_name'] = get_value('staff', 'employee_name', 'id_employee', $device['id_owner']);
-    $device['team_name'] = get_value('team', 'team_name', 'id_team', $device['id_team']);
-    $device['host'] = '';
+    $id_device=$_POST['id_device'];
+    $interfaces=get_interfaces($id_device);
+    
+    $device = get_device($id_device);
+    $device['interfaces']=  $interfaces;
+    $device['host'] = !empty($interfaces) ? array_shift($interfaces)['host'] : '';
     include 'html/sections/device_tr.html';
 }
 if (isset($_POST['get_vm_tr'])) {
