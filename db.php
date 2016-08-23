@@ -129,9 +129,12 @@ function get_interface_list($id_device, $id_type = false) {
             id_device,
             ip,
             host,
-            id_type
+            id_type,
+            name AS type_name
 	FROM 
            interfaces
+        NATURAL JOIN
+            int_type
         WHERE
             id_device=$id_device
 	";

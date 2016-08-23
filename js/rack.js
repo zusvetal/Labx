@@ -1,9 +1,12 @@
-var id_rack = $('#rackTable').data('idRack');
-var list = new List('device_model', 'id_model', 'model');
 
-
+///******************************************************************************/
+///*************************    alert  ******************************************/
+///*****************************************************************************/
+//$('#alert').on('closed.bs.alert', function () {
+//    $('button.add-device').show();
+//});
 /******************************************************************************/
-/*************************** left menu  *************************************/
+/*************************** left menu (deprecated)  **************************/
 /******************************************************************************/
 $('#content').on('click', 'span.edit', function () {
     $('.tools').toggleClass('hidden');
@@ -12,41 +15,6 @@ $('#content').on('click', 'span.book', function () {
     $('.booking').toggleClass('hidden');
 });
 
-/******************************************************************************/
-/*************************** update item  *************************************/
-/******************************************************************************/
-
-
-$('#content').on('dblclick', '.value', function () {
-    var $td = $(this);
-    var value = $td.text();
- if ($td.closest('tr').data('idDevice') !== 0) {
-    }
-    else {
-        $td.html('<input class="input-value form-control" type="text">').find('input').val(value);
-    }
-});
-$('#content ').on('keypress', 'input.input-value', function (event) {
-    var key = event.which,
-            targetEl = event.target,
-            input = $(this),
-            idModel,
-            checkingIdModel;
-    if (key === 13) {   /*press Enter*/
-        var idDeviceInRack = $(input).closest('tr').attr('data-id-device-in-rack');
-        var value = $(input).val();
-        var item = $(input).closest('td').attr('data-item');
-        if (item === 'mng_ip') {
-            if (!checkFreeIp(value)) {
-                alert('This ip is already used');
-                $(input).closest('td').text(value);
-                return false;
-            }
-        }
-        updateValue('devices_in_racks', item, value, 'id_device_in_rack', idDeviceInRack)
-        $(input).closest('td').text(value);
-    }
-});
 /******************************************************************************/
 /********************* update ip interface of rack and tower devices  *********/
 /******************************************************************************/
@@ -63,6 +31,7 @@ $('#content').on('click', 'span.update-ip', function () {
                 $icon.closest('div.tower').data('idDevice') :
                 $tr.data('idDevice'),
             idDeviceInRack = $icon.hasClass('edit-tower') ?
+             
                 $icon.closest('div.tower').data('idDeviceInRack') :
                 $tr.data('idDeviceInRack');
     modal.getModal($('#updateIpInterface'))
@@ -310,12 +279,7 @@ $('#content').on('click', '.del-device', function () {
     }
 });
 
-/******************************************************************************/
-/*************************    alert  ******************************************/
-/*****************************************************************************/
-$('#alert').on('closed.bs.alert', function () {
-    $('button.add-device').show();
-});
+
 
 
 /******************************************************************************/
@@ -558,6 +522,7 @@ $('#content').on('click', 'span.info', function () {
                                <div id="modelDescription"></div>\
                                <div id="generalInfo"></div>\
                                <div id="deviceCards"></div>\
+                               <div id="vmList"></div>\
                                <div id="historyEvents"></div>\
                               ')
                 return getMainInfo($('#mainInfo'), 'device', idDevice);
@@ -581,9 +546,9 @@ $('#content').on('click', 'span.info', function () {
                 console.log(data);
                 return deviceModuleTable($('#deviceCards'), idDevice);
             })
-            .then(function (data) {
-                console.log(data);
-            });
+            .then(function () {
+                return vmList($('#vmList'), idDevice);
+            })
 });
 
 /******************************************************************************/

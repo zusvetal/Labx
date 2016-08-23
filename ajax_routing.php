@@ -105,7 +105,29 @@ $app->get('/get_hypervisor_tr', function ($request, $response, $args) {
     $device = get_device($id_device);
     $device['interfaces']= $interfaces;
     $device['host'] = !empty($interfaces) ? array_shift($interfaces)['host'] : '';
+    $device['location']=device_location($id_device);
     
     include 'html/sections/hypervisor_tr.html';
+});
+$app->get('/get_vm_device_list', function ($request, $response, $args) {
+    $id_device=$request->getQueryParams()['id_device'];
+    $interfaces=get_interfaces($id_device);
+    
+    
+    include 'html/sections/vm_device_list.html';
+});
+$app->get('/get_vm_device_tr', function ($request, $response, $args) {
+    $id_virtual_mashine = $request->getQueryParams()['id_virtual_mashine'];
+    $vm =  get_vm($id_virtual_mashine);
+    
+    
+    include 'html/sections/vm_device_tr.html';
+});
+$app->get('/get_vm_tr', function ($request, $response, $args) {
+    $id_virtual_mashine = $request->getQueryParams()['id_virtual_mashine'];
+    $vm =  get_vm($id_virtual_mashine);
+    
+    
+    include 'html/sections/vm_tr.html';
 });
 ?>

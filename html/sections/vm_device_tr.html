@@ -1,0 +1,14 @@
+<tr  class="vm " data-id-virtual-mashine="<?=$vm['id_virtual_mashine']?>" data-id-interface="<?=$vm['id_interface']?>">
+    <td class="hide-td   ping-status">•</td>
+    <td  data-item="virt_ip"><?=$vm['virt_ip']?> </td>
+    <td  data-item="virt_host"><?=$vm['virt_host']?> </td>  
+    <td  data-item="os" title="VM OS"><?=$vm['os']?> </td>
+    <td  class="virt-comment" data-item="virt_comment" title="VM comment">
+        <div><?=$vm['virt_comment']?></div> 
+    </td>
+    <td class="hide-td"></td>
+    <?php if($_SESSION['level']=='0'):?>
+        <td class="hide-td icon"><span class="glyphicon glyphicon-edit edit-device-host" data-toggle="tooltip" title="edit virtual host"></span></td>
+        <td class="hide-td icon"><span class="glyphicon glyphicon-remove remove-device-host" data-toggle="tooltip" title="remove virtual host"></span></td> 
+    <?php endif;?>
+</tr>

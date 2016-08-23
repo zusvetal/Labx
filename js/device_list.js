@@ -347,6 +347,7 @@ $('#content').on('click.devices', 'span.info-device', function () {
                                <div id="modelDescription"></div>\
                                <div id="generalInfo"></div>\
                                <div id="deviceCards"></div>\
+                               <div id="vmList"></div>\
                                <div id="historyEvents"></div>\
                               ')
                 highlightRow($tr);
@@ -373,7 +374,10 @@ $('#content').on('click.devices', 'span.info-device', function () {
             })
             .then(function (data) {
                 return deviceModuleTable($('#deviceCards'), idDevice);
-            });
+            })
+            .then(function () {
+                return vmList($('#vmList'), idDevice);
+            })
 });
 /******************************************************************************/
 /**************************** transfer device  ********************************/

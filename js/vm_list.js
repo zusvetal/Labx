@@ -1,8 +1,7 @@
 var getVMRow = function (idVirtualMashine) {
-    return  $.post(
-            "/ajax",
+    return  $.get(
+            '/get_vm_tr',
             {
-                get_vm_tr: '1',
                 id_virtual_mashine:  idVirtualMashine
             }
     );
@@ -52,12 +51,12 @@ $('#content').on('click.device', 'span.add-host', function (event) {
             .then(function () {
                 modal.setTitle('Add new virtual host');
                 modal.setWidth('30%');
-                highlightRow($tr);
+                highlightRow($deviceRow);
         
                 /*action after closing modal window*/
                 $('#content').on('hidden.bs.modal', modal.object, function () {
-                    updateHypervisorRow($tr);
-                    highlightingRowRemove($tr);
+                    updateHypervisorRow($deviceRow);
+                    highlightingRowRemove($deviceRow);
                 });
                 modal.show();
                 return form.eventListener();

@@ -1139,6 +1139,39 @@ td.icon{
     display:inline;
 }
 /*******************************************************************************/
+/************************ vm_device_list.html *********************************/
+/*******************************************************************************/
+#vmDeviceList td.virt-comment{
+    font-size: 12px;
+    
+}
+#vmDeviceList td.virt-comment p{
+    margin:0px;
+}
+span.ping{
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+
+}
+span.ping.ok{
+    background-color: rgba(76, 158, 73, 0.7);
+    
+}
+span.ping.fail{
+    background-color: rgba(215, 75, 73, 0.9);
+    
+}
+#vmDeviceList .icon span{
+    display: none;
+}
+
+#vmDeviceList tr:hover .icon span{
+    display:inline;
+}
+
+/*******************************************************************************/
 /************************ cards.html ******************************/
 /*******************************************************************************/
 #modulesTable .working-status, #modulesTable .transfer-status{

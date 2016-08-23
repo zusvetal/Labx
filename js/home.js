@@ -227,11 +227,17 @@ var highLightNewEntry = function (element) {
         $(element).addClass('hover');
     }, 1000);
 };
-var slideToEl = function ($from, $to) {
-    $from.animate({
-        scrollTop: $to.offset().top
+var slideToEl = function ($container, $to) {
+    $container.animate({
+        scrollTop:$to.offset().top - $container.offset().top + $container.scrollTop()
     }, 1000);
 };
+var highlightingRowRemove=function($tr){
+    $tr.removeClass('info');
+}
+var highlightRow=function($tr){
+    $tr.addClass('info');
+}
 var recountNumber = function ($fields) {
     var num = 0;
     $fields.each(function () {
@@ -1406,9 +1412,106 @@ var checkDeviceModulesChanges = function ($fieldForNotification,idDevice) {
             return dfd.promise();
 };
 
- 
+var FreeEquipList = function (type, idLocation) {
+    this.type = type;
+    this.idLocation = idLocation;
+    this.getList = function ($parentEl, modelName, callback) {
+        var dfd = jQuery.Deferred();
+        this.$parentEl = $parentEl;
 
+        $.post(
+                "/ajax",
+                {
+                    get_free_equipment: '1',
+                    type: type,
+                    model: modelName
+                },
+        function (list) {
+            $parentEl.html(list);
+            dfd.resolve($parentEl);
+            if (callback && typeof (callback) === "function") {
+                callback();
+            }
+        });
+        return dfd.promise();
+    };
+    this.addElement = function (param) {
+        $parentEl = this.$parentEl;
+        var tr = '\
+            <tr  data-id-element="' + param.id + '">\
+            <td  data-item="model">' + param.model + '</td>\
+            <td  data-item="asset_harmonic">' + param.assetHarmonic + '</td>  \
+            <td  data-item="asset_gl">' + param.assetGl + '</td>\
+            <td  data-item="sn">' + param.sn + '</td>\
+            <td  data-item="owner">' + param.owner + '</td>\
+        </tr>\
+    ';
+        $parentEl.find('table')
+                .append(tr);
+        $parentEl.find('table  tr:nth-last-of-type(1)')
+                .click();
 
+    };
+    this.chooseElement = function (sn) {
+        $parentEl = this.$parentEl;
+        $parentEl.find('[data-item="sn"]')
+                .each(function () {
+                    var $td = $(this);
+                    if ($td.text().trim() === sn) {
+                        $td.closest('tr').click();
+                        return true;
+                    }
+                });
+        return false;
+    };
+    this.eventListener = function (callback) {
+        var $parentEl = this.$parentEl;
+        var dfd = jQuery.Deferred();
+
+        /*choose element for binding*/
+        $parentEl.on('click.free', '#unusedDeviceTable tr', function () {
+            var $tr = $(this),
+                    $table = $tr.closest('#unusedDeviceTable'),
+                    idElement = $tr.attr('data-id-element');
+            $table.find('tr').removeClass('info');
+            $tr.addClass('info');
+            $parentEl.find(".bind").slideDown();
+            $table.attr('data-id-element', idElement);
+            $parentEl.find('.bind').focus();
+
+        });
+
+        /*bind choosing element*/
+        $parentEl.on('click.free', 'button.bind', function () {
+            var idElement = $parentEl.find('#unusedDeviceTable').data('idElement');
+            if (type === 'device') {
+                updateValue('device_list', 'id_location', idLocation, 'id_device', idElement)
+                        .then(function () {
+                            $parentEl.empty();
+                            $parentEl.off('.free', '**');
+                            dfd.resolve(idElement);
+                            if (callback && typeof (callback) === "function") {
+                                callback(idElement);
+                            }
+                        });
+            }
+            else if (type === 'module') {
+                updateValue('module_list', 'id_device', idLocation, 'id_module', idElement)
+                        .then(function () {
+                            $parentEl.empty();
+                            $parentEl.off('.free', '**');
+                            dfd.resolve(idElement);
+                            if (callback && typeof (callback) === "function") {
+                                callback(idElement);
+                            }
+                        });
+            }
+
+        });
+
+        return dfd.promise();
+    };
+};
 var deviceModuleTable = function ($parentEl, idDevice) {
         var dfd = jQuery.Deferred(),
             infoFromDevice, infoFromDB,
@@ -1899,7 +2002,7 @@ var deviceModuleTable = function ($parentEl, idDevice) {
 };
 var netInterfaceInfo = function ($parentEl, idDevice) {
     var dfd = jQuery.Deferred(),
-            count, status, field, ip, host,
+            count, status, field, ip, host,interfaceType,
             field = '\
                         <center>\
                             <div class="int-info edit">\
@@ -1913,13 +2016,69 @@ var netInterfaceInfo = function ($parentEl, idDevice) {
                                 <div class="description"></div>\
                             </div>\
                         </center>';
+    $parentEl.on('click.descr', 'span.show-hide', function () {
+        var $icon = $(this),
+                $descr = $icon.closest('.int-info').find('.description'),
+                idInterface = $descr.data('idInterface'),
+                text;
+
+        if ($descr.is(':hidden')) {
+            $icon
+                    .addClass('glyphicon-chevron-down')
+                    .removeClass('glyphicon-chevron-up');
+            if ($descr.is(':empty')) {
+                text = getValue('interfaces', 'comment', 'id_interface', idInterface);
+                text = (text !== '0') ? text : '';
+                $descr.html(text);
+            }
+            $descr.slideDown();
+        }
+        else {
+            $icon
+                    .addClass('glyphicon-chevron-up')
+                    .removeClass('glyphicon-chevron-down');
+            $descr.slideUp();
+        }
+    });
+    $parentEl.on('click.descr', 'span.edit-descr', function () {
+        var $icon = $(this),
+                $descr = $icon.closest('.int-info').find('.description'),
+                idInterface = $descr.data('idInterface'),
+                text = getValue('interfaces', 'comment', 'id_interface', idInterface);
+        text = (text !== '0') ? text : '';
+        $descr.html('<textarea class="descr" placeholder="Interface description"></textarea>\
+                     <center><button class="btn a-btn submit">Write</button></center>');
+
+        $descr
+                .find('textarea')
+                .val(text);
+        if ($descr.is(':hidden')) {
+            $icon
+                    .closest('.int-info')
+                    .find('.show-hide')
+                    .click();
+        }
+    });
+    $parentEl.on('click.descr', '.submit', function () {
+        var $button = $(this),
+                $descrField = $button.closest('.description'),
+                idInterface = $descrField.data('idInterface'),
+                text = $descrField.find('textarea').val();
+        updateValueList('interfaces', {comment: text}, 'id_interface', idInterface)
+                .then(function () {
+                    $descrField.html(text);
+                });
+    });
     getInterfaceList(idDevice)
             .then(function (interfaces) {
                 count = Object.keys(interfaces).length;
                 if (count === 1) {
                     for (var id in interfaces) {
+                        console.log(interfaces);
                         ip = interfaces[id]['ip'];
-                        host = interfaces[id]['host'];
+                        host = (interfaces[id]['type_name']!=='hypervisor')
+                                ? interfaces[id]['host']
+                                :interfaces[id]['host']+' ('+interfaces[id]['type_name']+')';
                         ping(ip)
                                 .then(function (ping) {
                                     status = ping ?
@@ -1974,61 +2133,166 @@ var netInterfaceInfo = function ($parentEl, idDevice) {
                 dfd.resolve($parentEl);
 //                dfd.always($parentEl.off('.descr', '**'))
             });
-    $parentEl.on('click.descr', 'span.show-hide', function () {
-        var $icon = $(this),
-                $descr = $icon.closest('.int-info').find('.description'),
-                idInterface = $descr.data('idInterface'),
-                text;
 
-        if ($descr.is(':hidden')) {
-            $icon
-                    .addClass('glyphicon-chevron-down')
-                    .removeClass('glyphicon-chevron-up');
-            if ($descr.is(':empty')) {
-                text = getValue('interfaces', 'comment', 'id_interface', idInterface);
-                text = (text !== '0') ? text : '';
-                $descr.html(text);
-            }
-            $descr.slideDown();
-        }
-        else {
-            $icon
-                    .addClass('glyphicon-chevron-up')
-                    .removeClass('glyphicon-chevron-down');
-            $descr.slideUp();
-        }
-    });
-    $parentEl.on('click.descr', 'span.edit-descr', function () {
-        var $icon = $(this),
-                $descr = $icon.closest('.int-info').find('.description'),
-                idInterface = $descr.data('idInterface'),
-                text = getValue('interfaces', 'comment', 'id_interface', idInterface);
-        text = (text !== '0') ? text : '';
-        $descr.html('<textarea class="descr" placeholder="Interface description"></textarea>\
-                     <center><button class="btn a-btn submit">Write</button></center>');
-
-        $descr
-                .find('textarea')
-                .val(text);
-        if ($descr.is(':hidden')) {
-            $icon
-                    .closest('.int-info')
-                    .find('.show-hide')
-                    .click();
-        }
-    });
-    $parentEl.on('click.descr', '.submit', function () {
-        var $button = $(this),
-                $descrField = $button.closest('.description'),
-                idInterface = $descrField.data('idInterface'),
-                text = $descrField.find('textarea').val();
-        updateValueList('interfaces', {comment: text}, 'id_interface', idInterface)
-                .then(function () {
-                    $descrField.html(text);
-                });
-    });
     return dfd.promise();
+}; 
+var vmList = function ($parentEl, idDevice) {
+    var checkHypervisor = function (idDevice) {
+        return getInterfaceList(idDevice)
+                .then(function (interfaces) {
+                    if (objectLength(interfaces) === 0) {
+                        return $.Deferred().reject();
+                    }
+                    for (var interface in interfaces) {
+                        if (interfaces[interface].type_name === 'hypervisor') {
+                            return true;
+                        }
+                        return $.Deferred().reject();
+                    }
+                })
+    }
+    var writeSectionBody=function(){
+            var body = ('\
+                <div class="section-header">\
+                     <a class=" collapsed" data-toggle="collapse"  href="#cardsCollapse" aria-expanded="true" aria-controls="cardsCollapse">\
+                         Vm list\
+                     </a>\
+                     <span class="glyphicon glyphicon-chevron-down arrow"></span>\
+                     </div>\
+                     <div id="cardsCollapse" class="section-content collapse in">\
+                         <div class="loading"></div>\
+                     </div>\
+                     <div id="vmEdit" style="display:none"></div>\
+                 </div>\
+                 ');
+        $parentEl.html(body);
+    }
+    var getVMListTemplate = function (idDevice) {
+        return $.get('/get_vm_device_list', {id_device: idDevice});
+    }
+    var writeVMListTemplate = function (vmListTemplate) {
+        $parentEl.find('.section-content').html(vmListTemplate);
+    }
+    var pingVMHost=function($trVM){
+            var pingOkHtml ='<span class="ping ok" data-toggle="tooltip" title="device availiable"></span>',
+                pingFailHtml ='<span class = "ping fail" data-toggle = "tooltip" title = "device not availiable"></span>',
+                ipVM = $trVM.find('[data-item="virt_ip"]').text().trim();
+        console.log(ipVM,$trVM);
+       return  ping(ipVM)
+                    .then(function (ping) {
+                        if (ping) {
+                            $trVM.find('.ping-status')
+                                    .html(pingOkHtml);
+                        }
+                        else {
+                            $trVM.find('.ping-status')
+                                    .html(pingFailHtml);
+                        }
+                    })
+    }
+    var pingVMHosts = function () {
+        var promise = $.when();
+        $parentEl.find('.vm').each(function () {
+            var $trVM = $(this);
+            promise = promise
+                    .then(function () {
+                        return pingVMHost($trVM);
+                    })
+        })
+        return promise;
+    }
+    var getVMRow = function (idVirtualMashine) {
+    return  $.get(
+            '/get_vm_device_tr',
+            {
+                id_virtual_mashine:  idVirtualMashine
+            }
+    );
 };
+    /********************Events**********************************/
+    $parentEl.on('click.vmDevice', 'span.edit-device-host', function (event) {
+        event.preventDefault();
+        var $btn = $(this),
+                $tr = $btn.closest('tr.vm'),
+                idInterface = $tr.data('idInterface'),
+                idVirtualMashine = $tr.data('idVirtualMashine'),
+                $formField = $parentEl.find('#vmEdit'),
+                form = new VMForm(idInterface),
+                $trs = $btn.closest('table').find('tr.vm');
+        highlightingRowRemove($trs);
+        highlightRow($tr);
+        form.getForm($formField, {id_virtual_mashine: idVirtualMashine})
+                .then(function (data) {
+                    return $formField.slideDown();
+                })
+                .then(function (data) {
+                    return slideToEl($('#modalWindow'), $formField);
+                })
+                .then(function () {
+                    return form.eventListener();
+                })
+                .then(
+                        function () {
+                            return $formField.slideUp();
+                        },
+                        function () {
+                            highlightingRowRemove($tr);
+                        }
+                )
+                .then(function () {
+                    $formField.empty();
+                    highlightingRowRemove($tr);
+                    return getVMRow(idVirtualMashine);
+                })
+                .then(function (vmRowHtml) {
+                    var $trNew = $(vmRowHtml).replaceAll($tr);
+                    pingVMHost($trNew);
+                })
+    })
+    $parentEl.on('click.vmDevice', 'span.remove-device-host', function (event) {
+        event.preventDefault();
+        var $btn = $(this),
+                $tr = $btn.closest('tr.vm'),
+                idInterface = $tr.data('idInterface'),
+                idVirtualMashine = $tr.data('idVirtualMashine'),
+                $formField = $parentEl.find('#vmEdit');
+
+        $.confirm('Do you want to remove VM')
+                .then(function () {
+                    return deleteValue('virtual_mashines', 'id_virtual_mashine', idVirtualMashine);
+                })
+                .then(function () {
+                    return $tr.fadeOut();
+                })
+                .then(function () {
+                    return $tr.remove();
+                })
+    })
+    /******************Execution vmList()***********************/
+    return checkHypervisor(idDevice)
+            .then(
+                    function (status) {
+                        return getVMListTemplate(idDevice);
+                    },
+                    function () {
+                        console.log('device haven`t hypervisor');
+                    }
+            )
+            .then(function () {
+                writeSectionBody();
+                return getVMListTemplate(idDevice);
+            })
+            .then(function (vmListTemplate) {
+                writeVMListTemplate(vmListTemplate);
+            })
+            .then(function () {
+                pingVMHosts();
+            })
+
+}
+
+
+
 var patchPanelForm = function ($parentEl, idRack, topSlot, callback) {
     var dfd = $.Deferred();
     var modelList = new List('patchpanel_model', 'id_model', 'name');
@@ -3772,7 +4036,6 @@ var ModelForm = function (type) {
 
 };
 var VMForm = function (idInterface) {
-    var dfd = jQuery.Deferred();
     this.idInterface = idInterface
     this.getForm = function ($parentEl, options, callback) {
         /*define method argument*/
@@ -3784,6 +4047,7 @@ var VMForm = function (idInterface) {
             options = {};
         }
         /***********************************/
+        var dfd = jQuery.Deferred();
         /*form can be for add new vm or edit old*/
         var action = (options.id_virtual_mashine !== undefined) ? 'update' : 'insert';
         this.idVirtualMashine = options.id_virtual_mashine;
@@ -3797,8 +4061,7 @@ var VMForm = function (idInterface) {
                 function (data) {
                     $parentEl.html(data);
                     /*fill form with option values*/
-                    if (action === 'update')
-                    {
+                    if (action === 'update') {
                         getValues('virtual_mashines', 'id_virtual_mashine', options.id_virtual_mashine)
                                 .then(function (values) {
                                     if (values) {
@@ -3814,6 +4077,10 @@ var VMForm = function (idInterface) {
                                         }
 
                                     }
+                                    dfd.resolve($parentEl);
+                                    if (callback && typeof (callback) === "function") {
+                                        callback();
+                                    }
                                 })
                     } else if (action === 'insert') {
                         for (var option in options) {
@@ -3826,6 +4093,7 @@ var VMForm = function (idInterface) {
                         }
                     }
                 });
+        return dfd.promise();
     }
     this.eventListener = function () {
         var $parentEl = this.$parentEl,
@@ -3835,6 +4103,7 @@ var VMForm = function (idInterface) {
                 ipPattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
                 dfd = jQuery.Deferred();
         $parentEl.on('click.vm', 'button.submit-vm', function (e) {
+            console.log('submit');
             var $ipInput = $parentEl.find('[name="virt_ip"]'),
                     ip = $ipInput.val(),
                     host = $parentEl.find('[name="virt_host"]').val(),
@@ -3844,6 +4113,7 @@ var VMForm = function (idInterface) {
                         '' :
                         $parentEl.find('#comment').summernote('code');
             /*ip field validation*/
+            
             if (ip !== '' && ip !== '0.0.0.0') {
                 if (!ipPattern.test(ip)) {
                     $ipInput.css({'border': 'solid 2px red'});
@@ -3898,118 +4168,17 @@ var VMForm = function (idInterface) {
                 dfd.always($parentEl.off('.vm', '**'));
             }
         });
+        $parentEl.on('click.vm', '#closeForm', function () {
+            $parentEl.empty();
+            $parentEl.off('.vm', '**');
+            dfd.reject();
+        });
         return dfd.promise();
     }
 }
-var FreeEquipList = function (type, idLocation) {
-    this.type = type;
-    this.idLocation = idLocation;
-    this.getList = function ($parentEl, modelName, callback) {
-        var dfd = jQuery.Deferred();
-        this.$parentEl = $parentEl;
 
-        $.post(
-                "/ajax",
-                {
-                    get_free_equipment: '1',
-                    type: type,
-                    model: modelName
-                },
-        function (list) {
-            $parentEl.html(list);
-            dfd.resolve($parentEl);
-            if (callback && typeof (callback) === "function") {
-                callback();
-            }
-        });
-        return dfd.promise();
-    };
-    this.addElement = function (param) {
-        $parentEl = this.$parentEl;
-        var tr = '\
-            <tr  data-id-element="' + param.id + '">\
-            <td  data-item="model">' + param.model + '</td>\
-            <td  data-item="asset_harmonic">' + param.assetHarmonic + '</td>  \
-            <td  data-item="asset_gl">' + param.assetGl + '</td>\
-            <td  data-item="sn">' + param.sn + '</td>\
-            <td  data-item="owner">' + param.owner + '</td>\
-        </tr>\
-    ';
-        $parentEl.find('table')
-                .append(tr);
-        $parentEl.find('table  tr:nth-last-of-type(1)')
-                .click();
 
-    };
-    this.chooseElement = function (sn) {
-        $parentEl = this.$parentEl;
-        $parentEl.find('[data-item="sn"]')
-                .each(function () {
-                    var $td = $(this);
-                    if ($td.text().trim() === sn) {
-                        $td.closest('tr').click();
-                        return true;
-                    }
-                });
-        return false;
-    };
-    this.eventListener = function (callback) {
-        var $parentEl = this.$parentEl;
-        var dfd = jQuery.Deferred();
 
-        /*choose element for binding*/
-        $parentEl.on('click.free', '#unusedDeviceTable tr', function () {
-            var $tr = $(this),
-                    $table = $tr.closest('#unusedDeviceTable'),
-                    idElement = $tr.attr('data-id-element');
-            $table.find('tr').removeClass('info');
-            $tr.addClass('info');
-            $parentEl.find(".bind").slideDown();
-            $table.attr('data-id-element', idElement);
-            $parentEl.find('.bind').focus();
-
-        });
-
-        /*bind choosing element*/
-        $parentEl.on('click.free', 'button.bind', function () {
-            var idElement = $parentEl.find('#unusedDeviceTable').data('idElement');
-            if (type === 'device') {
-                updateValue('device_list', 'id_location', idLocation, 'id_device', idElement)
-                        .then(function () {
-                            $parentEl.empty();
-                            $parentEl.off('.free', '**');
-                            dfd.resolve(idElement);
-                            if (callback && typeof (callback) === "function") {
-                                callback(idElement);
-                            }
-                        });
-            }
-            else if (type === 'module') {
-                updateValue('module_list', 'id_device', idLocation, 'id_module', idElement)
-                        .then(function () {
-                            $parentEl.empty();
-                            $parentEl.off('.free', '**');
-                            dfd.resolve(idElement);
-                            if (callback && typeof (callback) === "function") {
-                                callback(idElement);
-                            }
-                        });
-            }
-
-        });
-
-        return dfd.promise();
-    };
-};
-var getLeftRackMenu = function ($parentEl, callback) {
-    return $parentEl.load(
-            "/html/sections/rack_left_menu.html",
-            function (data) {
-                if (typeof callback !== 'undefined') {
-                    callback(data);
-                }
-            });
-};
 var getRack = function ($parentEl, idRack, callback) {
     var dfd =$.Deferred();
     $.post(
@@ -4044,6 +4213,8 @@ var showDeviceInRack = function ($parentEl, idDevice) {
             })
     return dfd.promise();
 }
+
+
 var getVirtualHosts = function ($parentEl, idInterface, callback) {
     return $.post(
             "/ajax",
@@ -4118,6 +4289,7 @@ var getWorkStatus = function ($parentEl, callback) {
     return dfd.promise();
 };
 
+
 var setLocationOnHand = function (idDevice, idEmployee) {
     var dfd = jQuery.Deferred();
     insertValueListAsync('devices_on_hands', {id_device: idDevice, id_employee: idEmployee})
@@ -4147,6 +4319,15 @@ var historyEvents = function ($parentEl, type, id, callback) {
         dfd.resolve();
     });
     return dfd.promise();
+};
+var getLeftRackMenu = function ($parentEl, callback) {
+    return $parentEl.load(
+            "/html/sections/rack_left_menu.html",
+            function (data) {
+                if (typeof callback !== 'undefined') {
+                    callback(data);
+                }
+            });
 };
 
 /******************************************************************************/
@@ -4468,9 +4649,11 @@ jQuery.fn.exists = function () {
     return $(this).length;
 };
 function objectLength(obj) {
-  var t = typeof(obj);
-  var i=0;
-  if (t!="object" || obj==null) return 0;
-  for (x in obj) i++;
-  return i;
+    var t = typeof (obj);
+    var i = 0;
+    if (t != "object" || obj == null)
+        return 0;
+    for (x in obj)
+        i++;
+    return i;
 }

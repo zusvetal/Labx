@@ -82,10 +82,7 @@ if (isset($_POST['get_device_tr'])) {
     $device['host'] = !empty($interfaces) ? array_shift($interfaces)['host'] : '';
     include 'html/sections/device_tr.html';
 }
-if (isset($_POST['get_vm_tr'])) {
-    $vm = get_vm($_POST['id_virtual_mashine']);
-    include 'html/sections/vm_tr.html';
-}
+
 if (isset($_POST['get_port_set_list'])) {
     $set_list = get_port_set_list();
     foreach ($set_list as $id_port_set => $name) {

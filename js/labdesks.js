@@ -172,13 +172,18 @@ $('#content').on('click', 'span.info', function () {
                 modal.setTitle('<b>' + modelName + '</b>');
                 modal.show();
                 modal.addBody('<div id="statusInfo"></div>\
+                               <div id="mainInfo"></div>\
                                <div id="deviceDescription"></div>\
                                <div id="modelDescription"></div>\
                                <div id="generalInfo"></div>\
                                <div id="deviceCards"></div>\
+                               <div id="vmList"></div>\
                                <div id="historyEvents"></div>\
                               ')
-                return getMainInfo($('#deviceDescription'), 'device', idDevice);
+                return getMainInfo($('#mainInfo'), 'device', idDevice);
+            })
+            .then(function () {
+                return deviceDescription($('#deviceDescription'), 'device', idDevice);
             })
             .then(function () {
                 return modelDescription($('#modelDescription'), 'device', modelName);
@@ -196,9 +201,9 @@ $('#content').on('click', 'span.info', function () {
                 console.log(data);
                 return deviceModuleTable($('#deviceCards'), idDevice);
             })
-            .then(function (data) {
-                console.log(data);
-            });
+            .then(function () {
+                return vmList($('#vmList'), idDevice);
+            })
 });
 /******************************************************************************/
 /***************************** Add/update interfaces *********************************/
