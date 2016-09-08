@@ -5,7 +5,8 @@ function set_access_level() {
         'Vitalii Zusko',
         'Volodymyr Bogdanov',
         'Marcelo Kowalski',
-        'Asi Dahan'
+        'Asi Dahan',
+        'Oleksii Bielov'
     ];
     $user = $_SESSION['name'] . ' ' . $_SESSION['surname'];
     if (in_array($user, $admins)) {

@@ -50,7 +50,7 @@ if (isset($_POST['search_list'])) {
     echo $list !== false ? json_encode($list) : '0';
 }
 if (isset($_POST['get_modal_window'])) {
-    include 'html/modal_window.html';
+    include 'html/sections/modal_window.html';
 }
 if (isset($_POST['get_free_equipment'])) {
     $type = $_POST['type'];
@@ -91,7 +91,7 @@ if (isset($_POST['get_port_set_list'])) {
             'port_set' => @get_port_list($id_port_set)
         );
     }
-    include 'html/port_set_list.html';
+    include 'html/sections/port_set_list.html';
 }
 if (isset($_POST['get_port_list'])) {
     echo json_encode(port_list());
